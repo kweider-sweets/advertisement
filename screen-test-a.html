@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>KWEIDER — Screen Test A</title>
+<style>
+:root{
+  --burgundy:#53131C;
+  --burgundy-dark:#26080D;
+  --cream:#FAF6F0;
+  --gold:#C6A15B;
+  --black:#0F0F10;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:Arial,Tahoma,sans-serif}
+#viewport{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#000}
+#stage{
+  position:absolute;
+  width:1210px;
+  height:1078px;
+  left:50%;top:50%;
+  margin-left:-605px;
+  margin-top:-539px;
+  transform-origin:center center;
+  overflow:hidden;
+  background:#000;
+}
+.half{position:absolute;top:0;width:605px;height:1078px;overflow:hidden;background:#000}
+.left-half{left:0}
+.right-half{left:605px}
+.logical{
+  position:absolute;
+  left:50%;top:50%;
+  width:1078px;height:605px;
+  margin-left:-539px;
+  margin-top:-302.5px;
+  overflow:hidden;
+}
+/* This is the confirmed TEST A orientation. */
+.left-half .logical{transform:rotate(90deg)}
+.right-half .logical{transform:rotate(-90deg)}
+
+/* LEFT / TEXT SCREEN */
+.text-scene{
+  position:relative;width:100%;height:100%;overflow:hidden;color:var(--cream);
+  background:
+    radial-gradient(circle at 78% 25%,rgba(198,161,91,.18),transparent 25%),
+    radial-gradient(circle at 18% 82%,rgba(198,161,91,.10),transparent 28%),
+    linear-gradient(135deg,#140305 0%,var(--burgundy) 48%,#21070c 100%);
+}
+.text-scene:before{
+  content:"";position:absolute;inset:-25%;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,244,211,.16) 49%,rgba(255,255,255,.45) 50%,rgba(255,244,211,.14) 51%,transparent 60%);
+  transform:translateX(-75%);animation:sweep 5.8s ease-in-out infinite;
+}
+.text-scene:after{
+  content:"";position:absolute;inset:18px;border:2px solid rgba(198,161,91,.45);pointer-events:none;
+  box-shadow:inset 0 0 40px rgba(198,161,91,.08);
+}
+.logo{position:absolute;top:58px;left:70px;right:70px;text-align:center;letter-spacing:12px;font-size:54px;font-weight:700;color:var(--gold);opacity:0;animation:fadeDown .8s .15s forwards}
+.heritage{position:absolute;top:126px;left:60px;right:60px;text-align:center;font-size:19px;letter-spacing:3px;color:#ead9b2;opacity:0;animation:fadeDown .7s .45s forwards}
+.rule{position:absolute;top:176px;left:50%;height:2px;width:0;background:linear-gradient(90deg,transparent,var(--gold),transparent);transform:translateX(-50%);animation:rule 1s .75s forwards}
+.title{position:absolute;left:70px;right:70px;top:218px;text-align:center;font-size:82px;line-height:.95;font-weight:800;letter-spacing:2px;color:var(--cream);opacity:0;transform:translateY(35px);animation:titleIn .9s 1.0s cubic-bezier(.2,.8,.2,1) forwards}
+.arabic{position:absolute;left:70px;right:70px;top:320px;text-align:center;font-family:Tahoma,Arial,sans-serif;font-size:43px;font-weight:700;color:#f2dfb7;direction:rtl;opacity:0;animation:fadeUp .8s 1.35s forwards}
+.price-wrap{position:absolute;left:0;right:0;top:393px;text-align:center;opacity:0;transform:scale(.72);animation:priceIn .75s 1.75s cubic-bezier(.2,1.25,.3,1) forwards}
+.price{display:inline-block;padding:8px 34px 10px;border-top:2px solid rgba(198,161,91,.65);border-bottom:2px solid rgba(198,161,91,.65);font-size:91px;font-weight:900;color:#fff;text-shadow:0 0 24px rgba(198,161,91,.25)}
+.caption{position:absolute;left:90px;right:90px;bottom:62px;text-align:center;font-size:25px;letter-spacing:2px;color:#ead9b2;opacity:0;animation:fadeUp .7s 2.25s forwards}
+
+/* RIGHT / PRODUCT SCREEN */
+.product-scene{position:relative;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at 50% 50%,#20100b 0%,#080503 58%,#000 100%)}
+.product-scene:before{content:"";position:absolute;inset:-15%;background:radial-gradient(ellipse at 52% 52%,rgba(198,161,91,.28),transparent 34%);animation:breathe 4.5s ease-in-out infinite}
+.product-image{position:absolute;inset:22px;width:calc(100% - 44px);height:calc(100% - 44px);object-fit:contain;filter:drop-shadow(0 30px 35px rgba(0,0,0,.75));opacity:0;transform:scale(.82) translateY(26px);animation:productIn 1.2s .55s cubic-bezier(.2,.9,.2,1) forwards, float 5s 2s ease-in-out infinite}
+.gold-orbit{position:absolute;left:50%;top:50%;width:470px;height:470px;margin:-235px;border:1px solid rgba(198,161,91,.5);border-radius:50%;opacity:.55;animation:orbit 14s linear infinite}
+.gold-orbit:after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:var(--gold);top:12px;left:80px;box-shadow:0 0 25px var(--gold)}
+.corner{position:absolute;width:85px;height:85px;opacity:.8}
+.c1{left:24px;top:24px;border-left:3px solid var(--gold);border-top:3px solid var(--gold)}
+.c2{right:24px;top:24px;border-right:3px solid var(--gold);border-top:3px solid var(--gold)}
+.c3{left:24px;bottom:24px;border-left:3px solid var(--gold);border-bottom:3px solid var(--gold)}
+.c4{right:24px;bottom:24px;border-right:3px solid var(--gold);border-bottom:3px solid var(--gold)}
+
+.seam{position:absolute;z-index:50;left:602px;top:0;width:6px;height:1078px;background:#000;box-shadow:0 0 24px #000}
+.test-label{position:absolute;z-index:100;left:50%;bottom:8px;transform:translateX(-50%);font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.22);white-space:nowrap}
+
+@keyframes sweep{0%,22%{transform:translateX(-75%);opacity:0}30%{opacity:1}52%{transform:translateX(75%);opacity:.7}63%,100%{transform:translateX(75%);opacity:0}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes rule{to{width:430px}}
+@keyframes titleIn{to{opacity:1;transform:none}}
+@keyframes priceIn{to{opacity:1;transform:scale(1)}}
+@keyframes productIn{to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-10px) scale(1.015)}}
+@keyframes breathe{0%,100%{opacity:.45;transform:scale(.94)}50%{opacity:.85;transform:scale(1.08)}}
+@keyframes orbit{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <section class="half left-half">
+      <div class="logical">
+        <div class="text-scene">
+          <div class="logo">KWEIDER</div>
+          <div class="heritage">A LEGACY OF DAMASCENE LUXURY SINCE 1969</div>
+          <div class="rule"></div>
+          <div class="title">NABULSI<br>KUNAFA</div>
+          <div class="arabic">كنافة نابلسية</div>
+          <div class="price-wrap"><span class="price">£7.00</span></div>
+          <div class="caption">AUTHENTIC • FRESH • MADE TO ENJOY</div>
+        </div>
+      </div>
+    </section>
+    <section class="half right-half">
+      <div class="logical">
+        <div class="product-scene">
+          <div class="gold-orbit"></div>
+          <img class="product-image" src="2.webp" alt="Kunafa">
+          <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
+        </div>
+      </div>
+    </section>
+    <div class="seam"></div>
+    <div class="test-label">KWEIDER SCREEN TEST A • SEPARATE TEST FILE</div>
+  </div>
+</div>
+<script>
+(function(){
+  const stage=document.getElementById('stage');
+  function fit(){
+    const s=Math.min(innerWidth/1210,innerHeight/1078);
+    stage.style.transform='scale('+s+')';
+  }
+  addEventListener('resize',fit,{passive:true});fit();
+})();
+</script>
+</body>
+</html>
