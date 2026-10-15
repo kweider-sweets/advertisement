@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>KWEIDER — Winter Luxury Motion V2</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
+iframe{display:block;width:100%;height:100%;border:0;background:#000}
+</style>
+</head>
+<body>
+<iframe id="screen" src="index.html" title="KWEIDER winter luxury motion V2"></iframe>
+<script>
+(function(){
+  const frame=document.getElementById('screen');
+  let loopTimer=null;
+
+  frame.addEventListener('load',()=>{
+    const w=frame.contentWindow;
+    const d=frame.contentDocument;
+    if(!w||!d)return;
+
+    const style=d.createElement('style');
+    style.id='winter-luxury-v2-style';
+    style.textContent=`
+      /* V2 — restrained luxury motion inspired by watch / jewellery campaigns.
+         No changes to copy, prices, imagery, layout or base backgrounds. */
+
+      .display-stage{isolation:isolate}
+
+      /* Quiet the original promotional flash while keeping the existing structure intact. */
+      #cinematic-merger-overlay{
+        background:linear-gradient(112deg,transparent 0%,transparent 42%,rgba(243,217,141,.10) 49%,rgba(255,250,226,.16) 50%,rgba(243,217,141,.08) 51%,transparent 58%,transparent 100%) !important;
+        mix-blend-mode:screen !important;
+        filter:blur(12px) !important;
+      }
+
+      .text-flash-layer::before{opacity:.08 !important;filter:blur(14px) !important}
+      .text-glint-field{opacity:.07 !important}
+      .cinematic-grain{opacity:.055 !important}
+      .product-shimmer{opacity:.20 !important}
+
+      /* Text enters with controlled focus rather than promotional motion. */
+      .save-badge,
+      .ad-title-ar .title-line,
+      .ad-title-en .title-line,
+      .old-price-wrap,
+      .new-price,
+      .price-caption,
+      .offer-rule,
+      .ad-footer-ar,
+      .ad-footer-en{
+        animation-timing-function:cubic-bezier(.22,.72,.18,1) !important;
+      }
+
+      .ad-title-ar .title-line,
+      .ad-title-en .title-line{
+        animation-name:luxuryTitleReveal !important;
+        animation-duration:1.35s !important;
+      }
+
+      .save-badge{
+        animation-name:luxuryBadgeReveal !important;
+        animation-duration:1.1s !important;
+        box-shadow:0 1.1vh 2.8vh rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.28) !important;
+      }
+
+      .save-badge::after{
+        opacity:.38 !important;
+        animation-duration:1.45s !important;
+      }
+
+      /* Product behaves like a hero object on a jewellery turntable: almost still, but alive. */
+      .image-safe-frame{
+        transform-origin:50% 53%;
+        animation:luxuryCameraPush 7s cubic-bezier(.2,.66,.18,1) both !important;
+        will-change:transform;
+      }
+
+      .image-drift{
+        animation:luxuryMicroDrift 7s ease-in-out both !important;
+        will-change:transform;
+      }
+
+      .ad-bg-image{
+        filter:brightness(var(--image-brightness)) contrast(var(--image-contrast)) saturate(var(--image-saturation)) drop-shadow(0 2.2vh 3.4vh rgba(0,0,0,.70)) !important;
+      }
+
+      /* Price remains confident: one small illumination, no bounce. */
+      .new-price{
+        transform-origin:50% 55%;
+        animation-name:luxuryPriceReveal,luxuryPriceLight !important;
+        animation-duration:1.2s,1.7s !important;
+        animation-delay:var(--price-delay),3.65s !important;
+        animation-fill-mode:forwards,both !important;
+      }
+
+      .new-price::after{
+        left:-52% !important;
+        width:18% !important;
+        opacity:.48 !important;
+        background:linear-gradient(90deg,transparent,rgba(255,252,236,.46),rgba(243,217,141,.20),transparent) !important;
+        filter:blur(6px) !important;
+        animation:luxuryPriceSweep 1.45s 3.75s cubic-bezier(.24,.65,.22,1) both !important;
+      }
+
+      /* One controlled studio reflection across the product — not a recurring ad shimmer. */
+      #luxury-v2-layer{
+        position:absolute;
+        inset:0;
+        z-index:9040;
+        pointer-events:none;
+        overflow:hidden;
+        mix-blend-mode:screen;
+      }
+
+      #luxury-v2-edge-light{
+        position:absolute;
+        left:51%;
+        top:5%;
+        width:47%;
+        height:90%;
+        opacity:0;
+        background:radial-gradient(ellipse at 49% 48%,rgba(243,217,141,.085) 0%,rgba(197,160,89,.025) 30%,transparent 68%);
+        filter:blur(22px);
+        animation:luxuryHalo 7s .35s ease-in-out both;
+      }
+
+      #luxury-v2-reflection{
+        position:absolute;
+        top:-18%;
+        left:47%;
+        width:9%;
+        height:138%;
+        opacity:0;
+        transform:rotate(11deg) translateX(-460%);
+        transform-origin:center;
+        background:linear-gradient(90deg,transparent,rgba(243,217,141,.025),rgba(255,252,236,.20),rgba(243,217,141,.055),transparent);
+        filter:blur(10px);
+        animation:luxuryReflection 2.7s 1.75s cubic-bezier(.2,.63,.2,1) both;
+      }
+
+      #luxury-v2-shadow-breath{
+        position:absolute;
+        left:54%;
+        bottom:4%;
+        width:40%;
+        height:20%;
+        opacity:.12;
+        background:radial-gradient(ellipse at center,rgba(197,160,89,.12),transparent 66%);
+        filter:blur(28px);
+        animation:luxuryShadowBreath 6.8s ease-in-out both;
+      }
+
+      @keyframes luxuryTitleReveal{
+        0%{opacity:0;transform:translateY(16px);filter:blur(8px)}
+        58%{opacity:.96;filter:blur(1.5px)}
+        100%{opacity:1;transform:none;filter:none}
+      }
+
+      @keyframes luxuryBadgeReveal{
+        0%{opacity:0;transform:translateY(-10px);filter:blur(6px)}
+        100%{opacity:1;transform:none;filter:none}
+      }
+
+      @keyframes luxuryCameraPush{
+        0%{transform:translate3d(0,.35%,0) scale(1.000)}
+        42%{transform:translate3d(-.10%,-.10%,0) scale(1.012)}
+        100%{transform:translate3d(.18%,-.30%,0) scale(1.026)}
+      }
+
+      @keyframes luxuryMicroDrift{
+        0%{transform:translate3d(-.12%,.05%,0)}
+        48%{transform:translate3d(.10%,-.10%,0)}
+        100%{transform:translate3d(.20%,.02%,0)}
+      }
+
+      @keyframes luxuryPriceReveal{
+        0%{opacity:0;transform:translateY(12px) scale(.988);filter:blur(7px)}
+        68%{opacity:1;filter:blur(1px)}
+        100%{opacity:1;transform:none;filter:none}
+      }
+
+      @keyframes luxuryPriceLight{
+        0%,20%{filter:brightness(1);text-shadow:0 0 22px var(--price-glow-colour),0 0 68px rgba(197,160,89,.10)}
+        50%{filter:brightness(1.09);text-shadow:0 0 28px rgba(243,217,141,.25),0 0 76px rgba(197,160,89,.12)}
+        100%{filter:brightness(1);text-shadow:0 0 22px var(--price-glow-colour),0 0 68px rgba(197,160,89,.10)}
+      }
+
+      @keyframes luxuryPriceSweep{
+        0%{left:-52%;opacity:0}
+        22%{opacity:.48}
+        82%{opacity:.25}
+        100%{left:132%;opacity:0}
+      }
+
+      @keyframes luxuryHalo{
+        0%{opacity:0;transform:scale(.985)}
+        28%{opacity:.20}
+        72%{opacity:.14}
+        100%{opacity:.08;transform:scale(1.025)}
+      }
+
+      @keyframes luxuryReflection{
+        0%{opacity:0;transform:rotate(11deg) translateX(-460%)}
+        18%{opacity:.20}
+        55%{opacity:.24}
+        100%{opacity:0;transform:rotate(11deg) translateX(610%)}
+      }
+
+      @keyframes luxuryShadowBreath{
+        0%{opacity:.08;transform:scale(.96)}
+        54%{opacity:.15;transform:scale(1.02)}
+        100%{opacity:.09;transform:scale(1)}
+      }
+    `;
+    d.head.appendChild(style);
+
+    const stage=d.querySelector('.display-stage');
+    if(stage&&!d.getElementById('luxury-v2-layer')){
+      const layer=d.createElement('div');
+      layer.id='luxury-v2-layer';
+      layer.innerHTML='<div id="luxury-v2-edge-light"></div><div id="luxury-v2-reflection"></div><div id="luxury-v2-shadow-breath"></div>';
+      stage.appendChild(layer);
+    }
+
+    // Freeze scheduling and move from ad 1 to Kunafa ad 2 for the isolated visual test.
+    try{w.scheduleNext=()=>{};}catch(e){}
+    setTimeout(()=>{try{w.showNextAd();}catch(e){}},180);
+
+    clearInterval(loopTimer);
+    loopTimer=setInterval(()=>{
+      try{
+        if(w.document.hidden)return;
+        const layer=d.getElementById('luxury-v2-layer');
+        if(layer){
+          const reflection=layer.querySelector('#luxury-v2-reflection');
+          const halo=layer.querySelector('#luxury-v2-edge-light');
+          [reflection,halo].forEach(el=>{if(!el)return;el.style.animation='none';void el.offsetWidth;});
+          if(reflection)reflection.style.animation='luxuryReflection 2.7s 1.75s cubic-bezier(.2,.63,.2,1) both';
+          if(halo)halo.style.animation='luxuryHalo 7s .35s ease-in-out both';
+        }
+        w.restartCurrentAd();
+      }catch(e){}
+    },7200);
+  });
+})();
+</script>
+</body>
+</html>
