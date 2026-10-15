@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KWEIDER Screen Admin — Cinematic Preview</title>
+<style>
+:root{--gold:#c5a059;--gold2:#f3d98d;--bg:#080808;--panel:#111;--line:#30291f;--muted:#b6aa94}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Arial,sans-serif;color:#fff}
+#adminFrame{display:block;width:100%;height:100%;border:0;background:#080808}
+.floating{position:fixed;right:24px;bottom:24px;z-index:40;display:flex;gap:10px;align-items:center}
+.preview-btn{border:1px solid #d8bb66;border-radius:12px;padding:13px 18px;background:linear-gradient(135deg,#8b650f,#d1ae44);color:#090704;font-weight:800;cursor:pointer;box-shadow:0 12px 34px rgba(0,0,0,.52)}
+.preview-btn:hover{filter:brightness(1.08)}
+.modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.92);display:none;grid-template-rows:auto 1fr}.modal.open{display:grid}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 18px;border-bottom:1px solid var(--line);background:#0d0d0d}.bar-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.title{font-weight:800;color:var(--gold2);letter-spacing:.04em}.pill{padding:4px 9px;border:1px solid #55472f;border-radius:999px;color:#dcc47d;font-size:11px;text-transform:uppercase;letter-spacing:.08em}.status{color:var(--muted);font-size:12px}.buttons{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid #8b7443;background:#14120e;color:#ead89f;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer}.btn.primary{border-color:#d1ae44;background:#d1ae44;color:#090704}.btn.close{border-color:#5a4040;color:#efb1b1}
+.stage{min-height:0;display:grid;place-items:center;padding:14px;background:#000}.screen-shell{position:relative;height:100%;max-height:calc(100vh - 82px);aspect-ratio:1210/1078;max-width:100%;width:auto;background:#000;border:1px solid #3b3225;box-shadow:0 18px 60px rgba(0,0,0,.7);overflow:hidden}.screen-shell iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+@media(max-width:700px){.floating{right:12px;bottom:12px}.preview-btn{padding:11px 13px}.bar{align-items:flex-start;flex-direction:column}.buttons{width:100%}.stage{padding:4px}.screen-shell{width:100%;height:auto;max-height:none}}
+</style>
+</head>
+<body>
+<iframe id="adminFrame" src="screen-admin.html" title="KWEIDER screen admin"></iframe>
+<div class="floating"><button class="preview-btn" id="openPreview">▶ Cinematic Preview</button></div>
+<div class="modal" id="modal">
+  <div class="bar">
+    <div class="bar-left"><span class="title" id="previewTitle">Cinematic Preview</span><span class="pill" id="familyPill">V3</span><span class="status" id="status">Preparing preview…</span></div>
+    <div class="buttons">
+      <button class="btn primary" id="replay">Replay</button>
+      <button class="btn" id="pause">Pause</button>
+      <button class="btn" id="fullscreen">Full screen</button>
+      <button class="btn close" id="close">Close</button>
+    </div>
+  </div>
+  <div class="stage"><div class="screen-shell" id="screenShell"><iframe id="cineFrame" src="winter-luxury-v3.html" title="KWEIDER V3 preview"></iframe></div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const ONLINE=new Set([5,10,15,20,25]);
+const ATELIER=new Set([4,9,12,13,14,19]);
+const HERITAGE=new Set([1,6,7,17]);
+let renderTimer=null;
+function family(id){if(ONLINE.has(id))return'online';if(ATELIER.has(id))return'atelier';if(HERITAGE.has(id))return'heritage';return'imperial'}
+function familyLabel(id){return {online:'Online Prestige',atelier:'Atelier Dessert',heritage:'Heritage Warmth',imperial:'Imperial Luxury'}[family(id)]}
+function adminDoc(){try{return $('adminFrame').contentDocument}catch(e){return null}}
+function currentId(){const d=adminDoc();const active=d&&d.querySelector('.ad-btn.active');const m=active&&active.textContent.match(/Ad\s+(\d+)/i);return m?Number(m[1]):1}
+function val(id){const d=adminDoc();const el=d&&d.getElementById(id);return el?el.value:''}
+function imageSrc(){const d=adminDoc();const img=d&&d.getElementById('pImg');return img&&img.src?img.src:(currentId()+'.webp')}
+function currentAd(){const id=currentId();return {id,arLines:[val('titleEn')],enLines:[val('titleAr')],price:val('price'),oldPrice:val('oldPrice'),save:val('save'),labelAr:val('labelAr'),labelEn:val('labelEn'),img:imageSrc(),duration:7000,repeat:1,motion:id}}
+function cineContext(){try{const od=$('cineFrame').contentDocument;if(!od)return null;const inner=od.getElementById('screen');if(!inner||!inner.contentDocument)return null;return {iw:inner.contentWindow,d:inner.contentDocument}}catch(e){return null}}
+function setV3Family(ctx,id){const stage=ctx.d.querySelector('.display-stage');if(!stage)return;stage.classList.remove('v3-online','v3-atelier','v3-heritage','v3-imperial');stage.classList.add('v3-'+family(id));const h=ctx.d.getElementById('v3-halo'),r=ctx.d.getElementById('v3-reflect');[h,r].forEach(el=>{if(el){el.style.animation='none';void el.offsetWidth}});if(h)h.style.animation='v3Halo 7s .3s ease-in-out both';if(r)r.style.animation='v3Reflect '+(family(id)==='online'?'2.35s 1.15s':family(id)==='atelier'?'2.9s 1.45s':'2.7s 1.35s')+' cubic-bezier(.2,.64,.2,1) both'}
+function render(){clearTimeout(renderTimer);const ctx=cineContext();if(!ctx||typeof ctx.iw.createAdElement!=='function'){$('status').textContent='V3 engine is loading…';renderTimer=setTimeout(render,350);return}const ad=currentAd();try{ctx.iw.eval('clearTimeout(slideTimer); isPaused=true;');const slide=ctx.iw.createAdElement(ad);const area=ctx.d.getElementById('dynamic-ad-area');area.replaceChildren(slide);slide.classList.add('is-current');setV3Family(ctx,ad.id);const img=slide.querySelector('.ad-bg-image');if(img)img.style.transform=`translate(${val('posX')||0}%,${val('posY')||0}%) scale(${val('zoom')||1})`;slide.querySelectorAll('*').forEach(el=>el.style.animationPlayState='running');if(typeof ctx.iw.restartProgressBar==='function')ctx.iw.restartProgressBar(7000);$('familyPill').textContent=familyLabel(ad.id);$('previewTitle').textContent=`Ad ${ad.id} — ${val('titleEn')||val('titleAr')||'Preview'}`;$('status').textContent='Preview only · live display unchanged';}catch(e){$('status').textContent='Preview could not render. Reload this page if needed.'}}
+function schedule(){if(!$('modal').classList.contains('open'))return;clearTimeout(renderTimer);renderTimer=setTimeout(render,600)}
+function pause(){const ctx=cineContext();if(!ctx)return;ctx.d.querySelectorAll('.ad-slide,.ad-slide *,#v3-layer,#v3-layer *,.progress-bar').forEach(el=>el.style.animationPlayState='paused');$('status').textContent='Paused'}
+function bindAdmin(){const d=adminDoc();if(!d)return;['titleEn','titleAr','price','oldPrice','save','labelEn','labelAr','zoom','posX','posY','imageFile'].forEach(id=>{const el=d.getElementById(id);if(el){el.addEventListener('input',schedule);el.addEventListener('change',()=>setTimeout(schedule,120))}});d.addEventListener('click',e=>{if(e.target.closest('.ad-btn'))setTimeout(schedule,120)})}
+$('openPreview').onclick=()=>{$('modal').classList.add('open');render()};
+$('close').onclick=()=>{$('modal').classList.remove('open')};
+$('replay').onclick=render;
+$('pause').onclick=pause;
+$('fullscreen').onclick=()=>{$('screenShell').requestFullscreen?.()};
+$('adminFrame').addEventListener('load',()=>setTimeout(bindAdmin,250));
+$('cineFrame').addEventListener('load',()=>{if($('modal').classList.contains('open'))setTimeout(render,900)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').classList.contains('open'))$('modal').classList.remove('open')});
+</script>
+</body>
+</html>
