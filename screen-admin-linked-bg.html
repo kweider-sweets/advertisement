@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KWEIDER Screen Admin — Linked Background</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#manager{display:block;width:100%;height:100%;border:0;background:#080808}
+</style>
+</head>
+<body>
+<iframe id="manager" src="screen-admin-cinematic.html" title="KWEIDER Screen Admin"></iframe>
+<script>
+(()=>{
+const THEMES={
+  'luxury-black':{name:'Luxury Black',color:'#050505'},
+  'warm-black':{name:'Warm Black',color:'#0b0906'},
+  'espresso':{name:'Espresso',color:'#120b07'},
+  'burgundy':{name:'Deep Burgundy',color:'#16080b'},
+  'midnight':{name:'Midnight Navy',color:'#070b14'},
+  'charcoal-gold':{name:'Charcoal Gold',color:'#11100d'}
+};
+const GLOBAL_KEY='kweider-screen-background-global-v1';
+const OVERRIDE_KEY='kweider-screen-background-overrides-v1';
+let globalBg=read(GLOBAL_KEY,{theme:'luxury-black',color:'#050505'});
+let overrides=read(OVERRIDE_KEY,{});
+let scope='global';
+let injected=false;
+const manager=document.getElementById('manager');
+function read(k,f){try{return JSON.parse(localStorage.getItem(k)||'null')||f}catch(e){return f}}
+function save(){localStorage.setItem(GLOBAL_KEY,JSON.stringify(globalBg));localStorage.setItem(OVERRIDE_KEY,JSON.stringify(overrides))}
+function normalise(v){return /^#[0-9a-f]{6}$/i.test((v||'').trim())?v.toLowerCase():'#050505'}
+function outer(){try{return manager.contentDocument}catch(e){return null}}
+function admin(){try{const o=outer(),f=o&&o.getElementById('adminFrame');return f&&f.contentDocument}catch(e){return null}}
+function currentId(){const d=admin(),b=d&&d.querySelector('.ad-btn.active'),m=b&&b.textContent.match(/Ad\s+(\d+)/i);return m?Number(m[1]):1}
+function currentBg(){const id=currentId();return overrides[id]?.enabled?overrides[id]:globalBg}
+function activeSource(){const id=currentId();return scope==='ad'&&overrides[id]?.enabled?overrides[id]:currentBg()}
+function cinematicDoc(){try{const o=outer(),cf=o&&o.getElementById('cineFrame'),od=cf&&cf.contentDocument,inner=od&&od.getElementById('screen');return inner&&inner.contentDocument}catch(e){return null}}
+function inject(){
+  const d=admin(); if(!d||injected)return false;
+  const imageBox=d.querySelector('.image-box'); if(!imageBox)return false;
+  const style=d.createElement('style');style.id='linked-bg-admin-style';style.textContent=`
+  .k-bgbox{border:1px solid #3a3124;border-radius:12px;padding:14px;background:#0b0b0b;margin-top:14px}.k-bgbox h3{margin:0 0 10px;color:#f3d98d;font-size:14px}.k-scope{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.k-scope button{border:1px solid #55472f;background:#111;color:#d4c29b;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:700;cursor:pointer}.k-scope button.active{background:#d1ae44;color:#090704;border-color:#d1ae44}.k-select{width:100%;background:#090909;border:1px solid #302a20;color:#fff;border-radius:9px;padding:10px 11px}.k-swatches{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:9px}.k-swatch{height:34px;border-radius:9px;border:1px solid #5a4d38;cursor:pointer;position:relative}.k-swatch.active:after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#f7e5a4;font-weight:900;text-shadow:0 1px 4px #000}.k-colour{display:flex;gap:10px;align-items:center;margin-top:10px}.k-colour input[type=color]{width:54px;height:38px;border:1px solid #5b4b32;background:#111;border-radius:8px;padding:0}.k-colour input[type=text]{flex:1;background:#090909;border:1px solid #302a20;color:#fff;border-radius:9px;padding:10px}.k-meta{font-size:11px;color:#a89d89;margin-top:8px;line-height:1.45}.k-linked{display:inline-block;padding:4px 8px;border:1px solid #4d432e;border-radius:999px;color:#dbc67f;font-size:10px;margin-left:6px}`;d.head.appendChild(style);
+  const box=d.createElement('div');box.className='k-bgbox';box.innerHTML=`
+    <h3>Background / أرضية الشاشتين <span class="k-linked">LINKED</span></h3>
+    <div class="k-scope"><button id="kGlobal" class="active">Global — all ads</button><button id="kAd">This ad only</button></div>
+    <label style="display:block;color:#cfc4b0;font-size:12px;margin-bottom:6px">Luxury background theme</label>
+    <select id="kTheme" class="k-select"><option value="luxury-black">Luxury Black</option><option value="warm-black">Warm Black</option><option value="espresso">Espresso</option><option value="burgundy">Deep Burgundy</option><option value="midnight">Midnight Navy</option><option value="charcoal-gold">Charcoal Gold</option><option value="custom">Custom colour</option></select>
+    <div class="k-swatches">${Object.entries(THEMES).map(([k,v])=>`<button type="button" class="k-swatch" data-theme="${k}" title="${v.name}" style="background:${v.color}"></button>`).join('')}</div>
+    <div class="k-colour"><input id="kColor" type="color" value="#050505"><input id="kHex" type="text" maxlength="7" value="#050505"></div>
+    <div class="k-meta" id="kMeta">One continuous background across both screens. V3 lighting remains above it.</div>`;
+  imageBox.insertAdjacentElement('afterend',box);
+  d.getElementById('kGlobal').onclick=()=>setScope('global');
+  d.getElementById('kAd').onclick=()=>setScope('ad');
+  d.getElementById('kTheme').onchange=()=>{const t=d.getElementById('kTheme').value;setChoice(t,t==='custom'?d.getElementById('kColor').value:THEMES[t].color)};
+  d.querySelectorAll('.k-swatch').forEach(b=>b.onclick=()=>setChoice(b.dataset.theme,THEMES[b.dataset.theme].color));
+  d.getElementById('kColor').oninput=()=>{d.getElementById('kHex').value=d.getElementById('kColor').value;setChoice('custom',d.getElementById('kColor').value)};
+  d.getElementById('kHex').onchange=()=>{const c=normalise(d.getElementById('kHex').value);d.getElementById('kColor').value=c;setChoice('custom',c)};
+  d.addEventListener('click',e=>{if(e.target.closest('.ad-btn'))setTimeout(()=>{refreshControls();applyAll()},80)});
+  injected=true;refreshControls();applyAll();return true;
+}
+function setScope(v){scope=v;refreshControls()}
+function setChoice(theme,color){
+  const id=currentId(),cfg={theme,color:normalise(color)};
+  if(scope==='global')globalBg=cfg;else overrides[id]={...cfg,enabled:true};
+  save();refreshControls();applyAll();
+  const d=admin(),status=d&&d.getElementById('status');if(status)status.textContent=(scope==='global'?'Global':'Ad '+id)+' linked background updated. Live display unchanged.';
+}
+function refreshControls(){
+ const d=admin();if(!d||!d.getElementById('kTheme'))return;const src=activeSource(),id=currentId();
+ d.getElementById('kGlobal').classList.toggle('active',scope==='global');d.getElementById('kAd').classList.toggle('active',scope==='ad');
+ d.getElementById('kTheme').value=src.theme||'custom';d.getElementById('kColor').value=normalise(src.color);d.getElementById('kHex').value=normalise(src.color);
+ d.querySelectorAll('.k-swatch').forEach(b=>b.classList.toggle('active',b.dataset.theme===src.theme));
+ d.getElementById('kMeta').textContent=(scope==='global'?'Global background for all ads':'Override for Ad '+id)+(scope==='ad'&&!overrides[id]?.enabled?' · currently inheriting global':'')+' · '+normalise(src.color)+' · continuous across both screens.';
+}
+function applyStatic(){const d=admin();if(!d)return;const c=currentBg().color||'#050505',p=d.querySelector('.display-preview');if(p)p.style.background=c;['.left','.right','.image-stage'].forEach(sel=>{const e=d.querySelector(sel);if(e)e.style.background='transparent'})}
+function applyCinematic(){const d=cinematicDoc();if(!d)return;const c=normalise(currentBg().color),head=d.head;let st=d.getElementById('linked-bg-cinematic-style');if(!st){st=d.createElement('style');st.id='linked-bg-cinematic-style';head.appendChild(st)}st.textContent=`.display-stage,.ad-area,#dynamic-ad-area,.ad-container{background:${c}!important;background-color:${c}!important}.screen-half,.left-screen,.right-screen,.text-cinematic-stage,.image-cinematic-stage,.image-safe-frame,.image-entry,.image-drift{background:transparent!important;background-color:transparent!important}`}
+function applyAll(){applyStatic();applyCinematic()}
+manager.addEventListener('load',()=>{const wait=setInterval(()=>{const o=outer(),af=o&&o.getElementById('adminFrame');if(af){af.addEventListener('load',()=>setTimeout(inject,150),{once:true});if(admin()){clearInterval(wait);inject()}}},100)});
+setInterval(()=>{if(!injected)inject();else applyAll()},500);
+})();
+</script>
+</body>
+</html>
