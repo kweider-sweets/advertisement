@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>KWEIDER — Winter Luxury Motion V3</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}iframe{display:block;width:100%;height:100%;border:0;background:#000}</style>
+</head>
+<body>
+<iframe id="screen" src="index.html" title="KWEIDER winter luxury motion V3"></iframe>
+<script>
+(function(){
+const frame=document.getElementById('screen');
+const ONLINE=new Set([5,10,15,20,25]);
+const ATELIER=new Set([4,9,12,13,14,19]);
+const HERITAGE=new Set([1,6,7,17]);
+let activeId=null;
+function family(id){if(ONLINE.has(id))return'online';if(ATELIER.has(id))return'atelier';if(HERITAGE.has(id))return'heritage';return'imperial'}
+frame.addEventListener('load',()=>{
+ const w=frame.contentWindow,d=frame.contentDocument;if(!w||!d)return;
+ const style=d.createElement('style');style.id='winter-luxury-v3-style';style.textContent=`
+ .display-stage{isolation:isolate}
+ #cinematic-merger-overlay{background:linear-gradient(112deg,transparent 0%,transparent 43%,rgba(243,217,141,.07) 49%,rgba(255,250,226,.12) 50%,rgba(243,217,141,.05) 51%,transparent 57%,transparent 100%)!important;filter:blur(14px)!important;mix-blend-mode:screen!important}
+ .text-flash-layer::before{opacity:.055!important;filter:blur(15px)!important}.text-glint-field{opacity:.055!important}.cinematic-grain{opacity:.045!important}.product-shimmer{opacity:.14!important}
+ .ad-title-ar .title-line,.ad-title-en .title-line{animation-name:v3Text!important;animation-duration:1.3s!important;animation-timing-function:cubic-bezier(.22,.72,.18,1)!important}
+ .save-badge{animation-name:v3Badge!important;animation-duration:1.05s!important;animation-timing-function:cubic-bezier(.22,.72,.18,1)!important;box-shadow:0 1.1vh 2.8vh rgba(0,0,0,.46),inset 0 1px 0 rgba(255,255,255,.24)!important}
+ .new-price{animation-name:v3Price,v3PriceGlow!important;animation-duration:1.12s,1.55s!important;animation-delay:var(--price-delay),3.55s!important;animation-fill-mode:forwards,both!important;animation-timing-function:cubic-bezier(.22,.72,.18,1),ease-in-out!important}
+ .new-price::after{left:-54%!important;width:16%!important;opacity:.4!important;filter:blur(6px)!important;background:linear-gradient(90deg,transparent,rgba(255,252,236,.40),rgba(243,217,141,.16),transparent)!important;animation:v3PriceSweep 1.35s 3.7s cubic-bezier(.24,.65,.22,1) both!important}
+ #v3-layer{position:absolute;inset:0;z-index:9040;pointer-events:none;overflow:hidden;mix-blend-mode:screen}#v3-halo{position:absolute;left:50.5%;top:5%;width:48%;height:90%;opacity:0;filter:blur(24px)}#v3-reflect{position:absolute;top:-18%;left:48%;width:10%;height:140%;opacity:0;filter:blur(11px)}
+ .v3-imperial #v3-halo{background:radial-gradient(ellipse at 49% 49%,rgba(243,217,141,.075),rgba(197,160,89,.022) 31%,transparent 68%)}.v3-imperial #v3-reflect{background:linear-gradient(90deg,transparent,rgba(243,217,141,.025),rgba(255,252,236,.18),rgba(243,217,141,.05),transparent)}.v3-imperial .image-safe-frame{animation:v3ImperialCamera 7s cubic-bezier(.2,.66,.18,1) both!important}.v3-imperial .image-drift{animation:v3ImperialDrift 7s ease-in-out both!important}
+ .v3-heritage #v3-halo{background:radial-gradient(ellipse at 48% 50%,rgba(243,217,141,.055),rgba(197,160,89,.018) 34%,transparent 70%)}.v3-heritage #v3-reflect{background:linear-gradient(90deg,transparent,rgba(243,217,141,.018),rgba(255,252,236,.12),rgba(243,217,141,.04),transparent)}.v3-heritage .image-safe-frame{animation:v3HeritageCamera 6.9s cubic-bezier(.2,.66,.18,1) both!important}.v3-heritage .image-drift{animation:v3HeritageDrift 6.9s ease-in-out both!important}
+ .v3-online #v3-halo{background:radial-gradient(ellipse at 49% 49%,rgba(243,217,141,.09),rgba(197,160,89,.026) 30%,transparent 68%)}.v3-online #v3-reflect{background:linear-gradient(90deg,transparent,rgba(243,217,141,.03),rgba(255,252,236,.22),rgba(243,217,141,.06),transparent)}.v3-online .image-safe-frame{animation:v3OnlineCamera 7s cubic-bezier(.2,.66,.18,1) both!important}.v3-online .image-drift{animation:v3OnlineDrift 7s ease-in-out both!important}.v3-online .ad-footer-ar,.v3-online .ad-footer-en{text-shadow:0 0 18px rgba(243,217,141,.14);font-weight:800!important}.v3-online .save-badge{box-shadow:0 1.2vh 3vh rgba(0,0,0,.48),0 0 24px rgba(243,217,141,.10),inset 0 1px 0 rgba(255,255,255,.24)!important}
+ .v3-atelier #v3-halo{background:radial-gradient(ellipse at 49% 50%,rgba(255,245,220,.115),rgba(243,217,141,.04) 28%,transparent 67%)}.v3-atelier #v3-reflect{background:linear-gradient(90deg,transparent,rgba(255,245,220,.03),rgba(255,252,236,.20),rgba(243,217,141,.07),transparent)}.v3-atelier .right-screen::before{content:'';position:absolute;inset:7% 9% 11% 11%;z-index:5;pointer-events:none;background:radial-gradient(ellipse at 54% 49%,rgba(255,249,232,.09),rgba(243,217,141,.032) 25%,rgba(197,160,89,.012) 38%,transparent 69%);filter:blur(15px)}.v3-atelier .image-safe-frame{animation:v3AtelierCamera 7.2s cubic-bezier(.2,.66,.18,1) both!important}.v3-atelier .image-drift{animation:v3AtelierDrift 7.2s ease-in-out both!important}.v3-atelier .ad-bg-image{filter:brightness(calc(var(--image-brightness) + .06)) contrast(calc(var(--image-contrast) + .04)) saturate(calc(var(--image-saturation) + .035)) drop-shadow(0 2.35vh 3.8vh rgba(0,0,0,.72))!important}
+ @keyframes v3Text{0%{opacity:0;transform:translateY(14px);filter:blur(8px)}58%{opacity:.96;filter:blur(1.5px)}100%{opacity:1;transform:none;filter:none}}@keyframes v3Badge{0%{opacity:0;transform:translateY(-9px);filter:blur(6px)}100%{opacity:1;transform:none;filter:none}}@keyframes v3Price{0%{opacity:0;transform:translateY(10px) scale(.989);filter:blur(6px)}68%{opacity:1;filter:blur(1px)}100%{opacity:1;transform:none;filter:none}}@keyframes v3PriceGlow{0%,20%{filter:brightness(1)}50%{filter:brightness(1.08)}100%{filter:brightness(1)}}@keyframes v3PriceSweep{0%{left:-54%;opacity:0}22%{opacity:.4}82%{opacity:.22}100%{left:132%;opacity:0}}
+ @keyframes v3ImperialCamera{0%{transform:translate3d(0,.35%,0) scale(1)}42%{transform:translate3d(-.08%,-.10%,0) scale(1.012)}100%{transform:translate3d(.18%,-.28%,0) scale(1.026)}}@keyframes v3ImperialDrift{0%{transform:translate3d(-.12%,.04%,0)}48%{transform:translate3d(.09%,-.10%,0)}100%{transform:translate3d(.18%,.02%,0)}}
+ @keyframes v3HeritageCamera{0%{transform:translate3d(0,.25%,0) scale(1)}48%{transform:translate3d(-.06%,-.08%,0) scale(1.010)}100%{transform:translate3d(.12%,-.22%,0) scale(1.020)}}@keyframes v3HeritageDrift{0%{transform:translate3d(-.10%,.02%,0)}50%{transform:translate3d(.08%,-.06%,0)}100%{transform:translate3d(.14%,.02%,0)}}
+ @keyframes v3OnlineCamera{0%{transform:translate3d(0,.28%,0) scale(.998)}34%{transform:translate3d(-.10%,-.06%,0) scale(1.012)}100%{transform:translate3d(.22%,-.24%,0) scale(1.03)}}@keyframes v3OnlineDrift{0%{transform:translate3d(-.10%,.02%,0)}50%{transform:translate3d(.10%,-.10%,0)}100%{transform:translate3d(.22%,.01%,0)}}
+ @keyframes v3AtelierCamera{0%{transform:translate3d(0,.5%,0) scale(.996)}24%{transform:translate3d(-.06%,-.02%,0) scale(1.018)}68%{transform:translate3d(.08%,-.18%,0) scale(1.035)}100%{transform:translate3d(.16%,-.32%,0) scale(1.045)}}@keyframes v3AtelierDrift{0%{transform:translate3d(-.14%,.05%,0)}42%{transform:translate3d(.06%,-.08%,0)}100%{transform:translate3d(.18%,-.02%,0)}}
+ @keyframes v3Halo{0%{opacity:0;transform:scale(.985)}28%{opacity:.22}72%{opacity:.14}100%{opacity:.08;transform:scale(1.028)}}@keyframes v3Reflect{0%{opacity:0;transform:rotate(10deg) translateX(-440%)}18%{opacity:.20}55%{opacity:.24}100%{opacity:0;transform:rotate(10deg) translateX(630%)}}
+ `;d.head.appendChild(style);
+ const stage=d.querySelector('.display-stage');if(stage&&!d.getElementById('v3-layer')){const layer=d.createElement('div');layer.id='v3-layer';layer.innerHTML='<div id="v3-halo"></div><div id="v3-reflect"></div>';stage.appendChild(layer)}
+ function update(){try{const ad=typeof w.currentAd==='function'?w.currentAd():null;if(!ad||activeId===ad.id)return;activeId=ad.id;const f=family(Number(ad.id));stage.classList.remove('v3-online','v3-atelier','v3-heritage','v3-imperial');stage.classList.add('v3-'+f);const h=d.getElementById('v3-halo'),r=d.getElementById('v3-reflect');[h,r].forEach(x=>{if(x){x.style.animation='none';void x.offsetWidth}});if(h)h.style.animation='v3Halo 7s .3s ease-in-out both';if(r)r.style.animation='v3Reflect '+(f==='online'?'2.35s 1.15s':f==='atelier'?'2.9s 1.45s':'2.7s 1.35s')+' cubic-bezier(.2,.64,.2,1) both'}catch(e){}}
+ const target=d.getElementById('dynamic-ad-area')||d.body;new MutationObserver(()=>requestAnimationFrame(update)).observe(target,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});setInterval(update,500);update();
+});
+})();
+</script>
+</body>
+</html>
