@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER MP4 Export Studio — Safe Writer V4</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808;font-family:Arial,sans-serif}
+#studio{display:block;width:100%;height:100%;border:0;background:#080808}
+#safeState{position:fixed;left:16px;bottom:16px;z-index:9999;padding:8px 11px;border-radius:999px;border:1px solid #5f563c;background:rgba(10,10,9,.94);color:#d7c895;font:700 11px/1.2 Arial,sans-serif;box-shadow:0 10px 35px rgba(0,0,0,.45)}
+#safeState.ok{border-color:#3f613b;color:#bfe3b8}#safeState.warn{border-color:#7a6129;color:#ecd18b}#safeState.bad{border-color:#6a4040;color:#efb0b0}
+</style>
+</head>
+<body>
+<iframe id="studio" src="screen-export-studio.html?v=safe4" title="KWEIDER MP4 Export Studio"></iframe>
+<div id="safeState">Preparing Safe Writer V4…</div>
+<script>
+(()=>{
+'use strict';
+const frame=document.getElementById('studio'),state=document.getElementById('safeState');
+function clonePayload(x){
+  try{
+    if(!x)return x;
+    if(ArrayBuffer.isView(x)&&typeof x.slice==='function')return x.slice();
+    if(Object.prototype.toString.call(x)==='[object ArrayBuffer]')return x.slice(0);
+    if(typeof x==='object'&&x.type==='write'){
+      const y={...x};
+      if(ArrayBuffer.isView(x.data)&&typeof x.data.slice==='function')y.data=x.data.slice();
+      else if(Object.prototype.toString.call(x.data)==='[object ArrayBuffer]')y.data=x.data.slice(0);
+      return y;
+    }
+  }catch(_){ }
+  return x;
+}
+function patchWriter(w){
+  const C=w.FileSystemWritableFileStream;
+  if(!C||!C.prototype)throw new Error('File System Access writer is unavailable. Use current Chrome or Edge.');
+  const p=C.prototype;if(p.__kweiderSafeWriterV4)return;
+  const originalWrite=p.write,originalClose=p.close,originalAbort=p.abort;
+  const chains=new WeakMap(),errors=new WeakMap();
+  p.write=function(data){
+    const payload=clonePayload(data);let chain=chains.get(this)||Promise.resolve();
+    chain=chain.then(()=>originalWrite.call(this,payload));chains.set(this,chain);
+    chain.catch(e=>errors.set(this,e));return chain;
+  };
+  p.close=async function(){
+    const chain=chains.get(this);if(chain)await chain;
+    const err=errors.get(this);if(err)throw err;
+    return originalClose.call(this);
+  };
+  if(originalAbort)p.abort=async function(reason){try{const chain=chains.get(this);if(chain)await chain.catch(()=>{})}catch(_){ }return originalAbort.call(this,reason)};
+  Object.defineProperty(p,'__kweiderSafeWriterV4',{value:true,configurable:false});
+  w.__KWEIDER_SAFE_MP4_WRITER__={version:'4.0',active:true};
+}
+function patchCodec(w,d){
+  const VE=w.VideoEncoder;
+  if(!VE||typeof VE.isConfigSupported!=='function')throw new Error('WebCodecs VideoEncoder is unavailable. Use current Chrome or Edge.');
+  if(VE.__kweiderCodecFallbackV4)return;
+  const nativeSupport=VE.isConfigSupported.bind(VE);
+  VE.isConfigSupported=async function(config){
+    const base={...config};
+    const attempts=[base,{...base,hardwareAcceleration:'prefer-software'},{...base,hardwareAcceleration:'no-preference'}];
+    let firstResult=null;
+    for(let i=0;i<attempts.length;i++){
+      const cfg=attempts[i];let result;
+      try{result=await nativeSupport(cfg)}catch(e){result={supported:false,config:cfg}}
+      if(i===0)firstResult=result;
+      if(result&&result.supported){
+        const used=result.config||cfg;w.__KWEIDER_CODEC_MODE__=used.hardwareAcceleration||cfg.hardwareAcceleration||'no-preference';
+        if(i>0){state.textContent='Safe Writer V4 · Software H.264 fallback active';state.className='warn';}
+        return result;
+      }
+    }
+    return firstResult||{supported:false,config:base};
+  };
+  Object.defineProperty(VE,'__kweiderCodecFallbackV4',{value:true,configurable:false});
+}
+async function waitForBaseline(d){
+  const bf=d.getElementById('baselineFrame');if(!bf)return null;
+  if(bf.contentDocument?.readyState==='complete')return bf;
+  await new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;resolve()};bf.addEventListener('load',finish,{once:true});setTimeout(finish,3000)});
+  return bf;
+}
+async function patchImageFallback(w,d){
+  if(w.__KWEIDER_IMAGE_FALLBACK_V4__)return w.__KWEIDER_IMAGE_FALLBACK_V4__;
+  const nativeGet=w.Map.prototype.get;
+  const fallback=new w.Map();
+  if(!w.Map.prototype.__kweiderImageFallbackGetV4){
+    w.Map.prototype.get=function(key){
+      const value=nativeGet.call(this,key);
+      if((value===null||value===undefined)&&typeof key==='string'){
+        const alt=nativeGet.call(fallback,key);if(alt)return alt;
+      }
+      return value;
+    };
+    Object.defineProperty(w.Map.prototype,'__kweiderImageFallbackGetV4',{value:true,configurable:false});
+  }
+  const bf=await waitForBaseline(d);let assets=[];
+  try{assets=[...new Set(bf.contentWindow.eval('ORIGINAL.map(x=>x.img).filter(Boolean)'))]}catch(e){assets=[]}
+  let loaded=0,failed=[];
+  for(const asset of assets){
+    const url=new w.URL(asset,w.location.href).href;
+    try{
+      const img=new w.Image();img.decoding='async';img.crossOrigin='anonymous';
+      await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('Image load failed'));img.src=url});
+      fallback.set(url,img);loaded++;
+    }catch(e){failed.push(asset)}
+  }
+  const result={active:true,loaded,total:assets.length,failed,fallback};
+  w.__KWEIDER_IMAGE_FALLBACK_V4__=result;
+  return result;
+}
+function enhanceUI(d,imgHealth){
+  try{
+    const top=d.querySelector('.top');if(top&&!d.getElementById('safeWriterPill')){
+      const pill=d.createElement('div');pill.id='safeWriterPill';pill.style.cssText='border:1px solid #3f613b;color:#bfe3b8;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;margin-left:auto';top.appendChild(pill);
+    }
+    const pill=d.getElementById('safeWriterPill');if(pill)pill.textContent=`SAFE V4 · Images ${imgHealth.loaded}/${imgHealth.total}`;
+    const notice=d.getElementById('notice');if(notice){
+      if(imgHealth.failed.length){notice.textContent=`Image safety check: ${imgHealth.loaded}/${imgHealth.total} repository images loaded. Missing: ${imgHealth.failed.join(', ')}. Do not export full playlist until resolved.`;notice.className='notice bad';}
+      else{notice.textContent=`Safe Writer V4 active. Repository image fallback verified ${imgHealth.loaded}/${imgHealth.total}; file writes complete before close; H.264 HW/SW fallback ready.`;notice.className='notice';}
+    }
+  }catch(_){ }
+}
+async function apply(){
+  try{
+    const w=frame.contentWindow,d=frame.contentDocument;if(!w||!d)return false;
+    patchWriter(w);patchCodec(w,d);
+    state.textContent='Safe Writer V4 · Checking repository images…';state.className='warn';
+    const health=await patchImageFallback(w,d);enhanceUI(d,health);
+    if(health.failed.length){state.textContent=`Image check ${health.loaded}/${health.total} · ${health.failed.length} missing`;state.className='bad'}
+    else{state.textContent=`Safe MP4 V4 · Images ${health.loaded}/${health.total} · HW/SW ready`;state.className='ok'}
+    const refresh=d.getElementById('loadBtn');if(refresh)refresh.click();
+    return true;
+  }catch(e){state.textContent='Safe V4 error: '+(e.message||e);state.className='bad';return false}
+}
+frame.addEventListener('load',()=>setTimeout(()=>apply(),120));
+})();
+</script>
+</body>
+</html>
