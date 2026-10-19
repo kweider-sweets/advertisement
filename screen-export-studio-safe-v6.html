@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER MP4 Export Studio — Safe V6</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808;font-family:Arial,sans-serif}
+#host{display:block;width:100%;height:100%;border:0;background:#080808}
+#state{position:fixed;left:16px;bottom:16px;z-index:9999;padding:8px 11px;border-radius:999px;border:1px solid #7a6129;background:rgba(10,10,9,.96);color:#ecd18b;font:700 11px/1.2 Arial,sans-serif;box-shadow:0 10px 35px rgba(0,0,0,.45)}
+#state.ok{border-color:#3f613b;color:#bfe3b8}#state.bad{border-color:#6a4040;color:#efb0b0}
+</style>
+</head>
+<body>
+<iframe id="host" src="screen-export-studio-safe-v5.html?v=6" title="KWEIDER Safe MP4 Export V6"></iframe>
+<div id="state">Preparing deterministic image registry…</div>
+<script>
+(()=>{
+'use strict';
+const host=document.getElementById('host'),state=document.getElementById('state');
+function deepest(){
+  try{
+    const v5=host.contentDocument;if(!v5)return null;
+    const v4Frame=v5.getElementById('host');if(!v4Frame)return null;
+    const v4=v4Frame.contentDocument;if(!v4)return null;
+    const baseFrame=v4.getElementById('studio');if(!baseFrame)return null;
+    const w=baseFrame.contentWindow,d=baseFrame.contentDocument;if(!w||!d)return null;
+    return {w,d,v5,v4};
+  }catch(e){return null}
+}
+function cleanKey(s){
+  try{return String(s||'').split('#')[0].split('?')[0]}catch(_){return String(s||'')}
+}
+function baseName(s){const c=cleanKey(s);return c.substring(c.lastIndexOf('/')+1).toLowerCase()}
+async function imageFromUrl(w,url){
+  return await new Promise((resolve,reject)=>{
+    const img=new w.Image();img.decoding='async';
+    img.onload=()=>{if((img.naturalWidth||img.width)>0&&(img.naturalHeight||img.height)>0)resolve(img);else reject(new Error('zero-dimension image'))};
+    img.onerror=()=>reject(new Error('load failed: '+url));
+    img.src=url;
+  });
+}
+async function buildRegistry(w,d){
+  if(w.__KWEIDER_IMAGE_REGISTRY_V6__)return w.__KWEIDER_IMAGE_REGISTRY_V6__;
+  const bf=d.getElementById('baselineFrame');
+  if(!bf)throw new Error('Baseline image source is unavailable.');
+  if(bf.contentDocument?.readyState!=='complete')await new Promise(r=>{let done=false;const f=()=>{if(done)return;done=true;r()};bf.addEventListener('load',f,{once:true});setTimeout(f,3500)});
+  let rows=[];
+  try{rows=bf.contentWindow.eval('ORIGINAL.map(x=>({id:x.id,img:x.img})).filter(x=>x.img)')}catch(e){throw new Error('Could not read baseline image registry.');}
+  const unique=[];const seen=new Set();for(const r of rows){if(!seen.has(r.img)){seen.add(r.img);unique.push(r.img)}}
+  const exact=new w.Map(),clean=new w.Map(),names=new w.Map();let loaded=0;const failed=[];
+  for(const asset of unique){
+    const url=new w.URL(asset,w.location.href).href;
+    try{
+      const img=await imageFromUrl(w,url);
+      exact.set(url,img);clean.set(cleanKey(url).toLowerCase(),img);names.set(baseName(url),img);loaded++;
+    }catch(e){failed.push(asset)}
+  }
+  const reg={loaded,total:unique.length,failed,exact,clean,names};w.__KWEIDER_IMAGE_REGISTRY_V6__=reg;return reg;
+}
+function patchMap(w,registry){
+  const P=w.Map?.prototype;if(!P)throw new Error('Map registry unavailable.');
+  if(P.__kweiderDeterministicImagesV6)return;
+  const nativeGet=P.get;
+  P.get=function(key){
+    let v=nativeGet.call(this,key);
+    let invalid=(v===null||v===undefined);
+    try{if(!invalid&&w.HTMLImageElement&&v instanceof w.HTMLImageElement)invalid=!((v.naturalWidth||v.width)>0&&(v.naturalHeight||v.height)>0)}catch(_){ }
+    if(!invalid)return v;
+    if(typeof key!=='string')return v;
+    const k=String(key),ck=cleanKey(k).toLowerCase(),bn=baseName(k);
+    return nativeGet.call(registry.exact,k)||nativeGet.call(registry.clean,ck)||nativeGet.call(registry.names,bn)||v;
+  };
+  Object.defineProperty(P,'__kweiderDeterministicImagesV6',{value:true,configurable:false});
+}
+function lockExport(d,health){
+  const btn=d.getElementById('exportBtn');
+  if(!btn)return;
+  if(health.failed.length){btn.disabled=true;btn.title='Missing images: '+health.failed.join(', ')}
+  else{btn.disabled=false;btn.title='All repository fallback images verified'}
+}
+function enhance(d,health){
+  try{
+    const top=d.querySelector('.top');if(top&&!d.getElementById('imgV6Pill')){const p=d.createElement('div');p.id='imgV6Pill';p.style.cssText='border:1px solid #536b48;color:#c7e6bf;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;margin-left:8px';top.appendChild(p)}
+    const p=d.getElementById('imgV6Pill');if(p)p.textContent=`IMAGE REGISTRY ${health.loaded}/${health.total}`;
+    const n=d.getElementById('notice');if(n){if(health.failed.length){n.textContent=`Export blocked: ${health.failed.length} repository image(s) failed verification: ${health.failed.join(', ')}`;n.className='notice bad'}else{n.textContent=`Safe V6 ready. Deterministic repository image registry verified ${health.loaded}/${health.total}. Image + title reveal remains synchronized; export is blocked if a required image is unavailable.`;n.className='notice'}}
+  }catch(_){ }
+}
+async function apply(){
+  const x=deepest();if(!x)return false;
+  try{
+    state.textContent='Safe V6 · Verifying repository images…';state.className='';
+    const health=await buildRegistry(x.w,x.d);patchMap(x.w,health);enhance(x.d,health);lockExport(x.d,health);
+    const refresh=x.d.getElementById('loadBtn');if(refresh)refresh.click();
+    if(health.failed.length){state.textContent=`Safe V6 · Export blocked · ${health.failed.length} image(s) missing`;state.className='bad'}else{state.textContent=`Safe MP4 V6 · Images ${health.loaded}/${health.total} verified`;state.className='ok'}
+    x.w.__KWEIDER_SAFE_V6__=true;return true;
+  }catch(e){state.textContent='Safe V6 error: '+(e.message||e);state.className='bad';return false}
+}
+host.addEventListener('load',()=>setTimeout(()=>apply(),1200));
+setInterval(()=>{const x=deepest();if(x&&!x.w.__KWEIDER_SAFE_V6__)apply()},900);
+})();
+</script>
+</body>
+</html>
