@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER MP4 Export Studio — Safe Writer</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808;font-family:Arial,sans-serif}
+#studio{display:block;width:100%;height:100%;border:0;background:#080808}
+#safeState{position:fixed;left:16px;bottom:16px;z-index:9999;padding:8px 11px;border-radius:999px;border:1px solid #5f563c;background:rgba(10,10,9,.94);color:#d7c895;font:700 11px/1.2 Arial,sans-serif;box-shadow:0 10px 35px rgba(0,0,0,.45)}
+#safeState.ok{border-color:#3f613b;color:#bfe3b8}#safeState.bad{border-color:#6a4040;color:#efb0b0}
+</style>
+</head>
+<body>
+<iframe id="studio" src="screen-export-studio.html?v=safe2" title="KWEIDER MP4 Export Studio"></iframe>
+<div id="safeState">Preparing safe MP4 writer…</div>
+<script>
+(()=>{
+'use strict';
+const frame=document.getElementById('studio'),state=document.getElementById('safeState');
+function clonePayload(x){
+  try{
+    if(!x)return x;
+    if(ArrayBuffer.isView(x)&&typeof x.slice==='function')return x.slice();
+    if(Object.prototype.toString.call(x)==='[object ArrayBuffer]')return x.slice(0);
+    if(typeof x==='object'&&x.type==='write'){
+      const y={...x};
+      if(ArrayBuffer.isView(x.data)&&typeof x.data.slice==='function')y.data=x.data.slice();
+      else if(Object.prototype.toString.call(x.data)==='[object ArrayBuffer]')y.data=x.data.slice(0);
+      return y;
+    }
+  }catch(_){ }
+  return x;
+}
+function patchWriter(w){
+  const C=w.FileSystemWritableFileStream;
+  if(!C||!C.prototype)throw new Error('File System Access writer is unavailable. Use current Chrome or Edge.');
+  const p=C.prototype;if(p.__kweiderSafeWriterV2)return;
+  const originalWrite=p.write,originalClose=p.close,originalAbort=p.abort;
+  const chains=new WeakMap(),errors=new WeakMap(),counts=new WeakMap();
+  p.write=function(data){
+    const payload=clonePayload(data);let chain=chains.get(this)||Promise.resolve();
+    chain=chain.then(()=>originalWrite.call(this,payload));chains.set(this,chain);counts.set(this,(counts.get(this)||0)+1);
+    chain.catch(e=>errors.set(this,e));return chain;
+  };
+  p.close=async function(){
+    const chain=chains.get(this);if(chain)await chain;
+    const err=errors.get(this);if(err)throw err;
+    const result=await originalClose.call(this);return result;
+  };
+  if(originalAbort)p.abort=async function(reason){try{const chain=chains.get(this);if(chain)await chain.catch(()=>{})}catch(_){ }return originalAbort.call(this,reason)};
+  Object.defineProperty(p,'__kweiderSafeWriterV2',{value:true,configurable:false});
+  w.__KWEIDER_SAFE_MP4_WRITER__={version:'2.0',active:true};
+}
+function enhanceUI(d){
+  try{
+    const top=d.querySelector('.top');if(top&&!d.getElementById('safeWriterPill')){
+      const pill=d.createElement('div');pill.id='safeWriterPill';pill.textContent='SAFE FILE WRITER ACTIVE';pill.style.cssText='border:1px solid #3f613b;color:#bfe3b8;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;margin-left:auto';top.appendChild(pill);
+    }
+    const notice=d.getElementById('notice');if(notice){notice.textContent='Safe Writer V2 active. MP4 file writes are queued and fully completed before the file is closed. Use Test clip first.';notice.className='notice';}
+  }catch(_){ }
+}
+function apply(){
+  try{const w=frame.contentWindow,d=frame.contentDocument;if(!w||!d)return false;patchWriter(w);enhanceUI(d);state.textContent='Safe MP4 Writer V2 · Active';state.className='ok';return true}
+  catch(e){state.textContent='Safe writer error: '+(e.message||e);state.className='bad';return false}
+}
+frame.addEventListener('load',()=>setTimeout(apply,150));setInterval(()=>{if(!frame.contentWindow?.__KWEIDER_SAFE_MP4_WRITER__)apply()},700);
+})();
+</script>
+</body>
+</html>
