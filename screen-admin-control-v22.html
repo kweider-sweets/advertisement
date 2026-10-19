@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src https://hbloyloryxksbsornjlg.supabase.co wss://hbloyloryxksbsornjlg.supabase.co; frame-src 'self'; object-src 'none'; base-uri 'self'">
+<title>KWEIDER Screen Control V2.2</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808;font-family:Arial,sans-serif;color:#fff}
+#host{width:100%;height:100%;border:0;background:#080808}
+.toast{position:fixed;right:18px;bottom:18px;z-index:9999;display:none;max-width:min(760px,92vw);padding:11px 14px;border-radius:10px;border:1px solid #4a402d;background:#11100d;color:#ead9a7;font-size:12px;box-shadow:0 16px 45px rgba(0,0,0,.55)}
+.toast.show{display:block}.toast.ok{border-color:#3f613b;color:#bfe3b8}.toast.bad{border-color:#6a4040;color:#efb0b0}.toast.warn{border-color:#735e2d;color:#ecd18b}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v21.html?v=22" title="KWEIDER Screen Control V2.2"></iframe>
+<div id="toast" class="toast"></div>
+<script>
+(()=>{
+'use strict';
+const URL='https://hbloyloryxksbsornjlg.supabase.co';
+const KEY='sb_publishable_6oq2EgVDzMHkzxlRgwFdSw_MPU2DmaN';
+const db=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+const host=document.getElementById('host'),toast=document.getElementById('toast');
+let toastTimer=null,dragged=null,pending=false,lastSignature='',observer=null;
+function say(text,type=''){clearTimeout(toastTimer);toast.textContent=text;toast.className='toast show '+type;toastTimer=setTimeout(()=>toast.className='toast',4200)}
+function docs(){
+  try{
+    const v21=host.contentDocument;if(!v21)return {};
+    const control=v21.getElementById('host')?.contentDocument;if(!control)return {};
+    const secure=control.getElementById('frame')?.contentDocument;if(!secure)return {};
+    const linked=secure.getElementById('appFrame')?.contentDocument;if(!linked)return {};
+    const cinematic=linked.getElementById('manager')?.contentDocument;if(!cinematic)return {};
+    const baseFrame=cinematic.getElementById('adminFrame');
+    return {v21,control,secure,linked,cinematic,base:baseFrame?.contentDocument||null,baseWindow:baseFrame?.contentWindow||null};
+  }catch(e){return {}}
+}
+function adId(btn){const m=btn?.textContent.match(/Ad\s+(\d+)/i);return m?Number(m[1]):null}
+function listButtons(base){return [...(base?.querySelectorAll('#adList .ad-btn')||[])].filter(b=>adId(b)!=null)}
+function signature(base){return listButtons(base).map(adId).join(',')}
+function currentId(base){const b=base?.querySelector('.ad-btn.active');return adId(b)||1}
+async function ensureAdmin(){
+  const {data:{user}}=await db.auth.getUser();if(!user)throw new Error('Admin session not found. Sign in again.');
+  const {data,error}=await db.from('screen_admins').select('role').eq('user_id',user.id).maybeSingle();if(error)throw error;
+  if(!data||data.role!=='admin')throw new Error('Account is not authorised.');return user;
+}
+function addStyles(base){
+  if(base.getElementById('kDragStyle'))return;
+  const s=base.createElement('style');s.id='kDragStyle';s.textContent=`
+    .k-orderbox{border:1px solid #4a3c24;border-radius:12px;padding:12px;margin:0 0 14px;background:#0b0a08}
+    .k-order-title{color:#f0d78d;font-weight:800;font-size:13px;margin-bottom:5px}.k-order-note{color:#9f947f;font-size:10px;line-height:1.45;margin-bottom:9px}
+    .k-save-order{width:100%;border:1px solid #c5a059;background:linear-gradient(135deg,#805e12,#c9a640);color:#080706;border-radius:9px;padding:9px 10px;font-weight:900;cursor:pointer}.k-save-order:disabled{opacity:.5;cursor:wait}
+    .k-order-pending{margin-top:7px;font-size:10px;color:#e7c76f;display:none}.k-order-pending.show{display:block}
+    #adList .ad-btn{position:relative;padding-left:36px!important;cursor:grab!important;user-select:none}#adList .ad-btn:active{cursor:grabbing!important}
+    .k-drag-handle{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:17px;line-height:1;color:#8f826c;letter-spacing:-4px;pointer-events:none}
+    .ad-btn.k-dragging{opacity:.36!important;border-style:dashed!important}.ad-btn.k-drop-before{box-shadow:0 -3px 0 #d1ae44 inset,0 -3px 0 #d1ae44}.ad-btn.k-drop-after{box-shadow:0 3px 0 #d1ae44 inset,0 3px 0 #d1ae44}
+  `;base.head.appendChild(s);
+}
+function ensureOrderBox(base){
+  if(base.getElementById('kOrderManager'))return;
+  const sidebar=base.querySelector('.sidebar'),list=base.getElementById('adList');if(!sidebar||!list)return;
+  const box=base.createElement('div');box.id='kOrderManager';box.className='k-orderbox';box.innerHTML=`<div class="k-order-title">Ad order / ترتيب الظهور</div><div class="k-order-note">Drag advertisements up or down, then press Save Order. Only changed positions are saved to secure Draft.</div><button id="kSaveOrder" class="k-save-order" type="button">Save Order / حفظ الترتيب</button><div id="kOrderPending" class="k-order-pending">Unsaved order changes</div>`;
+  list.parentNode.insertBefore(box,list);base.getElementById('kSaveOrder').onclick=saveOrder;
+}
+function clearDropClasses(base){base?.querySelectorAll('.k-drop-before,.k-drop-after').forEach(x=>x.classList.remove('k-drop-before','k-drop-after'))}
+function markPending(base){pending=true;base?.getElementById('kOrderPending')?.classList.add('show');const b=base?.getElementById('kSaveOrder');if(b)b.textContent='Save Order / حفظ الترتيب *'}
+function bindButton(base,btn){
+  if(btn.dataset.kDragBound==='1')return;btn.dataset.kDragBound='1';btn.draggable=true;
+  const h=base.createElement('span');h.className='k-drag-handle';h.textContent='⋮⋮';btn.prepend(h);
+  btn.addEventListener('dragstart',e=>{dragged=btn;btn.classList.add('k-dragging');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',String(adId(btn)))}catch(_){}});
+  btn.addEventListener('dragend',()=>{btn.classList.remove('k-dragging');clearDropClasses(base);dragged=null});
+  btn.addEventListener('dragover',e=>{if(!dragged||dragged===btn)return;e.preventDefault();clearDropClasses(base);const r=btn.getBoundingClientRect(),before=e.clientY<r.top+r.height/2;btn.classList.add(before?'k-drop-before':'k-drop-after');e.dataTransfer.dropEffect='move'});
+  btn.addEventListener('dragleave',()=>btn.classList.remove('k-drop-before','k-drop-after'));
+  btn.addEventListener('drop',e=>{if(!dragged||dragged===btn)return;e.preventDefault();const list=base.getElementById('adList'),r=btn.getBoundingClientRect(),before=e.clientY<r.top+r.height/2;list.insertBefore(dragged,before?btn:btn.nextSibling);clearDropClasses(base);markPending(base);updateVisibleOrder(base)});
+}
+function updateVisibleOrder(base){
+  listButtons(base).forEach((btn,i)=>{btn.dataset.pendingOrder=String(i+1);const sm=btn.querySelector('small');if(sm){const txt=sm.textContent.replace(/ · #\d+ · /,` · #${i+1} · `);sm.textContent=txt}});
+  const id=currentId(base),current=listButtons(base).findIndex(b=>adId(b)===id)+1;if(current>0&&base.getElementById('kOrder'))base.getElementById('kOrder').value=current;
+}
+function bindAll(){
+  const {base}=docs();if(!base)return;addStyles(base);ensureOrderBox(base);listButtons(base).forEach(b=>bindButton(base,b));
+  if(!pending){const sig=signature(base);if(lastSignature&&sig!==lastSignature){/* V2 may have re-sorted after refresh; accept server order */}lastSignature=sig}
+  if(!observer){const list=base.getElementById('adList');if(list){observer=new MutationObserver(()=>setTimeout(bindAll,20));observer.observe(list,{childList:true,subtree:false})}}
+}
+function fullContentFromBase(id,baseWindow,existing,pub){
+  let d={};try{if(typeof baseWindow?.dataFor==='function')d=baseWindow.dataFor(id)||{}}catch(_){d={}}
+  const src=existing||pub||{};
+  return {
+    ...d,...src,
+    en:src.en??d.en??'',ar:src.ar??d.ar??'',price:src.price??d.price??'',oldPrice:src.oldPrice??d.oldPrice??'',save:src.save??d.save??'',labelEn:src.labelEn??d.labelEn??'',labelAr:src.labelAr??d.labelAr??'',
+    zoom:Number(src.zoom??d.zoom??1),x:Number(src.x??d.x??0),y:Number(src.y??d.y??0),
+    active:src.active!==false,durationSec:Number(src.durationSec??7),
+    imagePath:src.imagePath??null,publicImagePath:src.publicImagePath??null,publicImageUrl:src.publicImageUrl??null,imageMeta:src.imageMeta??d.imageMeta??null,
+    img:src.img??d.img??null,bgGlobal:src.bgGlobal??null,bgOverrides:src.bgOverrides??{}
+  };
+}
+async function saveOrder(){
+  const {base,baseWindow}=docs();if(!base||!baseWindow)return say('Order manager is not ready.','bad');
+  const btn=base.getElementById('kSaveOrder'),ids=listButtons(base).map(adId);if(!ids.length)return;
+  btn.disabled=true;btn.textContent='Saving order…';
+  try{
+    await ensureAdmin();
+    const [{data:drafts,error:de},{data:pubs,error:pe}]=await Promise.all([
+      db.from('screen_ads_draft').select('id,content,version').in('id',ids),db.from('screen_ads_public').select('id,content,source_version').in('id',ids)
+    ]);if(de)throw de;if(pe)throw pe;
+    const dm=Object.fromEntries((drafts||[]).map(r=>[r.id,r])),pm=Object.fromEntries((pubs||[]).map(r=>[r.id,r]));
+    const changed=[];
+    ids.forEach((id,i)=>{const old=Number(dm[id]?.content?.displayOrder??pm[id]?.content?.displayOrder??id);if(old!==i+1)changed.push({id,newOrder:i+1})});
+    if(!changed.length){pending=false;base.getElementById('kOrderPending')?.classList.remove('show');say('Order already matches Supabase. No changes needed.','ok');return}
+    for(const item of changed){
+      const existing=dm[item.id]?.content||null,pub=pm[item.id]?.content||null,content=fullContentFromBase(item.id,baseWindow,existing,pub);content.displayOrder=item.newOrder;
+      const {error}=await db.from('screen_ads_draft').upsert({id:item.id,content},{onConflict:'id'});if(error)throw error;
+    }
+    const {data:check,error:ce}=await db.from('screen_ads_draft').select('id,content').in('id',changed.map(x=>x.id));if(ce)throw ce;
+    for(const c of changed){const row=(check||[]).find(r=>r.id===c.id);if(Number(row?.content?.displayOrder)!==c.newOrder)throw new Error(`Order verification failed for Ad ${c.id}`)}
+    pending=false;base.getElementById('kOrderPending')?.classList.remove('show');lastSignature=ids.join(',');say(`Verified: display order saved securely for ${changed.length} advertisement${changed.length===1?'':'s'}.`,'ok');
+    setTimeout(()=>host.contentWindow.location.reload(),850);
+  }catch(e){say('Save Order failed: '+(e.message||e),'bad')}
+  finally{if(btn){btn.disabled=false;btn.textContent=pending?'Save Order / حفظ الترتيب *':'Save Order / حفظ الترتيب'}}
+}
+host.addEventListener('load',()=>{observer=null;pending=false;lastSignature='';setTimeout(bindAll,900)});setInterval(bindAll,650);
+})();
+</script>
+</body>
+</html>
