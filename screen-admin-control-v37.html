@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control V3.7 — Topbar Visual Controls</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#host{display:block;width:100%;height:100%;border:0;background:#080808}</style>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v36.html?v=37" title="KWEIDER Screen Control V3.7"></iframe>
+<script>
+(()=>{'use strict';
+const host=document.getElementById('host');
+function allDocs(doc,out=[],depth=0){if(!doc||depth>14)return out;out.push(doc);try{for(const f of doc.querySelectorAll('iframe')){try{if(f.contentDocument)allDocs(f.contentDocument,out,depth+1)}catch(_){}}}catch(_){}return out}
+function tune(){
+ try{
+  const root=host.contentDocument;if(!root)return false;
+  const docs=allDocs(root);
+  let visualFab=null,barRight=null,barDoc=null;
+  for(const d of docs){
+   if(!visualFab&&d.getElementById('visualFab'))visualFab=d.getElementById('visualFab');
+   const r=d.querySelector?.('.bar .right');
+   if(r&&d.getElementById('historyBtn')){barRight=r;barDoc=d;}
+  }
+  if(!visualFab||!barRight||!barDoc)return false;
+  visualFab.style.display='none';
+  let btn=barDoc.getElementById('visualControlsTopBtn');
+  if(!btn){
+   btn=barDoc.createElement('button');
+   btn.id='visualControlsTopBtn';
+   btn.className='btn';
+   btn.textContent='Visual Controls / الخط والحركة';
+   btn.style.borderColor='#c5a059';
+   btn.style.color='#f3d98d';
+   btn.style.background='linear-gradient(135deg,#221b0f,#3a2b10)';
+   btn.onclick=()=>visualFab.click();
+   const history=barDoc.getElementById('historyBtn');
+   barRight.insertBefore(btn,history||barRight.firstChild);
+  }else btn.onclick=()=>visualFab.click();
+  const pill=barDoc.querySelector('.pill');if(pill)pill.textContent='V3.7';
+  barDoc.title='KWEIDER Screen Control V3.7';
+  return true;
+ }catch(e){return false}
+}
+host.addEventListener('load',()=>setTimeout(tune,500));setInterval(tune,700);
+})();
+</script>
+</body>
+</html>
