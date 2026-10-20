@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Production MP4 Exporter V15</title>
+<style>html,body{margin:0;min-height:100%;background:#070707;color:#f3d98d;font-family:Arial,sans-serif}.boot{min-height:100vh;display:grid;place-items:center;text-align:center;padding:24px}.boot b{display:block;font-size:22px;letter-spacing:.08em}.boot span{display:block;margin-top:10px;color:#bcae91;font-size:13px}</style>
+</head>
+<body><div class="boot"><div><b>KWEIDER PRODUCTION EXPORTER V15</b><span>Loading premium motion + per-line text colours…</span></div></div>
+<script>
+(async()=>{'use strict';try{
+ const r=await fetch('screen-export-production-v12.html?v=12',{cache:'no-store'});if(!r.ok)throw new Error('Could not load V12 base: HTTP '+r.status);let src=await r.text();
+ src=src.replaceAll('PRODUCTION EXPORTER V12','PRODUCTION EXPORTER V15').replaceAll('Production MP4 Exporter V12','Production MP4 Exporter V15').replaceAll('Exporter V12','Exporter V15');
+ src=src.replace("html.replaceAll('PRODUCTION EXPORTER V8','PRODUCTION EXPORTER V12')","html.replaceAll('PRODUCTION EXPORTER V8','PRODUCTION EXPORTER V15')");
+ src=src.replace("html.replaceAll('Production MP4 Exporter V8','Production MP4 Exporter V12')","html.replaceAll('Production MP4 Exporter V8','Production MP4 Exporter V15')");
+ src=src.replace("html.replaceAll('Exporter V8','Exporter V12')","html.replaceAll('Exporter V8','Exporter V15')");
+ const needle='document.open();document.write(html);document.close();';
+ if(!src.includes(needle))throw new Error('V12 final write marker not found.');
+ const inject=`
+const fxMarker='function drawScene(ctx,ad,t,dur){';
+const fxHelpers=\`function premiumImageFx(ad,t,dur){
+ const f=ad?.visual?.imageFx||{},type=f.type||'static',k=clamp(Number(f.intensity??30)/100,0,1),dir=f.direction==='rtl'?-1:f.direction==='ltr'?1:(Number(ad.id)%2?1:-1),p=smooth(clamp(t/Math.max(.01,dur),0,1));
+ let x=0,y=0,s=1,halo=0;
+ if(type==='cinematic-push'||type==='push-halo')s=1+.012*k*p;
+ if(type==='editorial-drift'){x=dir*8*k*(p-.5);y=3*k*(1-p)-4*k*p;}
+ if(type==='ambient-halo'||type==='push-halo')halo=k*(.58+.42*Math.sin(Math.PI*p));
+ return{x,y,s,halo,p,dir,type};
+}
+function drawAmbientHalo(ctx,cx,cy,w,h,fx){
+ if(!fx||fx.halo<=0)return;
+ const rx=Math.max(140,w*.62),ry=Math.max(160,h*.56),a=.030*fx.halo;
+ ctx.save();ctx.globalCompositeOperation='screen';ctx.translate(cx,cy);ctx.scale(1,ry/rx);
+ const g=ctx.createRadialGradient(0,0,rx*.08,0,0,rx);g.addColorStop(0,'rgba(255,245,214,'+a+')');g.addColorStop(.46,'rgba(218,185,112,'+(a*.48)+')');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(-rx,-rx,rx*2,rx*2);ctx.restore();
+}
+function visualColor(ad,key,def){const v=String(ad?.visual?.colors?.[key]||'').trim();return /^#[0-9a-f]{6}$/i.test(v)?v:def}
+\`;
+if(!html.includes(fxMarker))throw new Error('V12 drawScene marker not found for V15.');
+html=html.replace(fxMarker,fxHelpers+fxMarker);
+html=html.replace("bmp=images.get(ad.id);if(bmp){const m=motion(t,dur,ad.id)","bmp=images.get(ad.id),premiumFx=premiumImageFx(ad,t,dur);if(bmp){const m=motion(t,dur,ad.id)");
+html=html.replace("scale=fit*Number(ad.zoom||1)*m.s*(imageM?imageM.s:1),cx=1620+Number(ad.x||0)/100*HALF_W+m.x+(imageM?imageM.x:0),cy=960+Number(ad.y||0)/100*FULL_H+m.y+(imageM?imageM.y:0)","scale=fit*Number(ad.zoom||1)*m.s*(imageM?imageM.s:1)*premiumFx.s,cx=1620+Number(ad.x||0)/100*HALF_W+m.x+(imageM?imageM.x:0)+premiumFx.x,cy=960+Number(ad.y||0)/100*FULL_H+m.y+(imageM?imageM.y:0)+premiumFx.y");
+html=html.replace("w=bmp.width*scale,h=bmp.height*scale;ctx.save();ctx.globalAlpha=reveal*(imageM?imageM.a:1);","w=bmp.width*scale,h=bmp.height*scale;drawAmbientHalo(ctx,cx,cy,w,h,premiumFx);ctx.save();ctx.globalAlpha=reveal*(imageM?imageM.a:1);");
+html=html.replace("text(ctx,ad.en,center,555,fitSize(ctx,ad.en,880,visualFs(ad,'en',100),30),'#f3d98d',reveal,false,'800');","text(ctx,ad.en,center,555,fitSize(ctx,ad.en,880,visualFs(ad,'en',100),30),visualColor(ad,'en','#f3d98d'),reveal,false,'800');");
+html=html.replace("text(ctx,ad.ar,center,690,fitSize(ctx,ad.ar,880,visualFs(ad,'ar',72),28),'#c5a059',reveal,true,'700');","text(ctx,ad.ar,center,690,fitSize(ctx,ad.ar,880,visualFs(ad,'ar',72),28),visualColor(ad,'ar','#c5a059'),reveal,true,'700');");
+html=html.replace("text(ctx,ad.oldPrice,center,1015,visualFs(ad,'old',47),'#f5ead0',price,false,'600');","text(ctx,ad.oldPrice,center,1015,visualFs(ad,'old',47),visualColor(ad,'old','#f5ead0'),price,false,'600');");
+html=html.replace("text(ctx,ad.price,0,0,visualFs(ad,'price',182),'#f3d98d',price,false,'800');","text(ctx,ad.price,0,0,visualFs(ad,'price',182),visualColor(ad,'price','#f3d98d'),price,false,'800');");
+html=html.replace("text(ctx,ad.labelAr,center,1575,visualFs(ad,'footerAr',43),'#dbc783',footer,true,'700');","text(ctx,ad.labelAr,center,1575,visualFs(ad,'footerAr',43),visualColor(ad,'footerAr','#dbc783'),footer,true,'700');");
+html=html.replace("text(ctx,ad.labelEn,center,1660,visualFs(ad,'footerEn',31),'#bba96e',footer,false,'600');","text(ctx,ad.labelEn,center,1660,visualFs(ad,'footerEn',31),visualColor(ad,'footerEn','#bba96e'),footer,false,'600');");
+html=html.replace('V12: V11 zero-black/no-freeze transition engine plus per-ad typography and cinematic entrance controls. Default settings reproduce the approved V11 behaviour.','V15: V12 typography + entrance controls, premium editorial product motion, and saved per-line text colours. Zero-black/no-freeze transitions remain preserved.');
+html=html.replace('Deterministic frame renderer · V11 transitions · typography + motion controls','Deterministic renderer · premium motion · per-line text colours');
+html=html.replace('<div class="pill">ZERO BLACK / NO FREEZE</div>','<div class="pill">ZERO BLACK / NO FREEZE</div><div class="pill">PREMIUM IMAGE MOTION</div><div class="pill">TEXT COLORS</div>');
+`;
+ src=src.replace(needle,inject+'\n'+needle);
+ document.open();document.write(src);document.close();
+}catch(err){document.body.innerHTML='<div class="boot"><div><b>V15 LOAD ERROR</b><span>'+String(err&&err.message||err)+'</span></div></div>';console.error(err)}})();
+</script>
+</body></html>
