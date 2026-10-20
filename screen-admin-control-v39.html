@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control V3.9 — Premium Image Motion</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#host{display:block;width:100%;height:100%;border:0;background:#080808}</style>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v38.html?v=39" title="KWEIDER Screen Control V3.9"></iframe>
+<script>
+(()=>{'use strict';const host=document.getElementById('host');let tuned=false;
+function allDocs(doc,out=[],depth=0){if(!doc||depth>18)return out;out.push(doc);try{for(const f of doc.querySelectorAll('iframe')){try{if(f.contentDocument)allDocs(f.contentDocument,out,depth+1)}catch(_){}}}catch(_){}return out}
+function find(){const docs=allDocs(host.contentDocument||document);let d=null,base=null,bar=null;for(const x of docs){if(!d&&x.getElementById('kImageFxCard'))d=x;if(!base&&x.getElementById('adList')&&x.getElementById('saveDraft'))base=x;if(!bar&&x.getElementById('historyBtn')&&x.querySelector?.('.bar .right'))bar=x}return{d,base,bar}}
+function currentBaseTransform(img){const t=img?.style?.transform||'';return t.replace(/\s+(translate|scale)\([^)]*\)/g,'')}
+function previewPremium(d,base){const img=base?.getElementById('pImg');if(!img)return;img.getAnimations?.().forEach(a=>a.cancel());const old=d.getElementById('kPremiumHalo');if(old)old.remove();const type=d.getElementById('kfxType')?.value||'static',k=Number(d.getElementById('kfxIntensity')?.value||30)/100,dir=(d.getElementById('kfxDirection')?.value==='rtl'?-1:1),baseT=currentBaseTransform(img),dur=5200;
+ if(type==='cinematic-push'||type==='push-halo'){img.animate([{transform:`${baseT} scale(1)`},{transform:`${baseT} scale(${1+.012*k})`}],{duration:dur,easing:'cubic-bezier(.22,.61,.36,1)',fill:'forwards'})}
+ if(type==='editorial-drift'){img.animate([{transform:`${baseT} translate(${-dir*4*k}px,${3*k}px)`},{transform:`${baseT} translate(${dir*4*k}px,${-4*k}px)`}],{duration:dur,easing:'cubic-bezier(.22,.61,.36,1)',fill:'forwards'})}
+ if(type==='ambient-halo'||type==='push-halo'){const stage=img.parentElement;if(stage){stage.style.position='absolute';img.style.position='relative';img.style.zIndex='2';const h=d.createElement('div');h.id='kPremiumHalo';Object.assign(h.style,{position:'absolute',left:'12%',right:'12%',top:'12%',bottom:'12%',zIndex:'1',pointerEvents:'none',borderRadius:'50%',filter:'blur(26px)',background:`radial-gradient(ellipse at center,rgba(255,244,214,${.026*k}),rgba(218,185,112,${.012*k}) 45%,rgba(0,0,0,0) 72%)`});stage.insertBefore(h,img);h.animate([{opacity:.72,transform:'scale(.985)'},{opacity:1,transform:'scale(1.015)'},{opacity:.8,transform:'scale(1)'}],{duration:dur,easing:'ease-in-out',fill:'forwards'})}}
+}
+function tune(){try{const {d,base,bar}=find();if(!d||!base)return false;const type=d.getElementById('kfxType');if(!type)return false;
+ type.innerHTML='<option value="static">Static — ثابت</option><option value="cinematic-push">Cinematic Push — دفع سينمائي هادئ</option><option value="editorial-drift">Editorial Drift — انزياح فاخر</option><option value="ambient-halo">Ambient Halo — هالة ضوء ناعمة</option><option value="push-halo">Push + Halo — موصى به</option>';
+ const typeLabel=type.closest('.kfx-field')?.querySelector('label');if(typeLabel)typeLabel.textContent='Premium image style';
+ const int=d.getElementById('kfxIntensity');if(int){int.max='65';if(Number(int.value)>45)int.value='30';const v=d.getElementById('kfxIntensityV');if(v)v.textContent=int.value+'%'}
+ const speed=d.getElementById('kfxSpeed')?.closest('.kfx-field');if(speed)speed.style.display='none';
+ const loop=d.getElementById('kfxLoop')?.closest('.kfx-check');if(loop)loop.style.display='none';
+ const note=d.querySelector('#kImageFxCard .kfx-note');if(note)note.textContent='Premium motion only: one slow editorial move across the ad. No oscillation, no sweep band, no flash, no strobe.';
+ const ct=d.querySelector('#kImageFxCard .ct');if(ct)ct.textContent='Premium Image Motion / حركة الصورة الفاخرة';
+ const prev=d.getElementById('kfxPreview');if(prev){prev.textContent='Preview Premium Motion';prev.onclick=()=>previewPremium(d,base)}
+ type.onchange=()=>previewPremium(d,base);if(int)int.oninput=()=>{const v=d.getElementById('kfxIntensityV');if(v)v.textContent=int.value+'%';previewPremium(d,base)};const dir=d.getElementById('kfxDirection');if(dir)dir.onchange=()=>previewPremium(d,base);
+ const exp=d.getElementById('exportBtn');if(exp){exp.textContent='Open V14 Exporter';exp.onclick=()=>window.open('screen-export-production-v14.html?v=14','_blank','noopener')}
+ if(bar){const p=bar.querySelector('.pill');if(p)p.textContent='V3.9';bar.title='KWEIDER Screen Control V3.9'}d.title='KWEIDER Visual Controls V3.9';tuned=true;return true}catch(e){return false}}
+host.addEventListener('load',()=>setTimeout(tune,850));setInterval(()=>{if(!tuned)tune()},700);
+})();
+</script>
+</body>
+</html>
