@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control V3.10 — Visibility Cleanup</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#host{display:block;width:100%;height:100%;border:0;background:#080808}</style>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v39.html?v=310" title="KWEIDER Screen Control V3.10"></iframe>
+<script>
+(()=>{'use strict';
+const host=document.getElementById('host');
+function allDocs(doc,out=[],depth=0){if(!doc||depth>20)return out;out.push(doc);try{for(const f of doc.querySelectorAll('iframe')){try{if(f.contentDocument)allDocs(f.contentDocument,out,depth+1)}catch(_){}}}catch(_){}return out}
+function findCtx(){const docs=allDocs(host.contentDocument||document);let base=null,bar=null;for(const d of docs){if(!base&&d.getElementById('kOpsBox')&&d.getElementById('adList'))base=d;if(!bar&&d.getElementById('historyBtn')&&d.querySelector?.('.bar .right'))bar=d}return{base,bar}}
+function tune(){try{
+ const {base,bar}=findCtx();if(!base)return false;
+ let st=base.getElementById('kVisibilityCleanupStyle');
+ if(!st){st=base.createElement('style');st.id='kVisibilityCleanupStyle';st.textContent=`
+  #kOpsBox{padding:14px!important}
+  #kOpsBox .k-ops-grid{grid-template-columns:1fr!important;gap:0!important}
+  #kOpsBox .k-toggle{min-height:44px!important;border-color:#4a432d!important;background:#0b0b09!important}
+  #kOpsBox .k-toggle input{width:19px!important;height:19px!important}
+  #kOpsBox .k-toggle span{font-size:13px!important}
+  #kOpsBox .k-op-note{margin-top:10px!important;color:#948b79!important}
+  #kDurationBox{margin-top:10px;border:1px solid #332b20;border-radius:10px;padding:10px 12px;background:#090909;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  #kDurationBox .k-op{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%}
+  #kDurationBox .k-op label{margin:0!important;color:#a99d89!important;font-size:10px!important}
+  #kDurationBox .k-op input[type=number]{width:88px!important;flex:0 0 88px!important;padding:7px 8px!important;text-align:center;font-weight:800;color:#f3d98d!important}
+  #kOpsBox.k-visible .k-toggle{border-color:#3f613b!important}
+  #kOpsBox.k-hidden .k-toggle{border-color:#6a4040!important;opacity:.9}
+ `;base.head.appendChild(st)}
+ const box=base.getElementById('kOpsBox'),title=box.querySelector('.k-ops-title'),active=base.getElementById('kActive'),activeText=base.getElementById('kActiveText');
+ if(title)title.textContent='Visibility / ظهور الإعلان';
+ const activeOp=active?.closest('.k-op');if(activeOp){const label=activeOp.querySelector('label');if(label)label.textContent='Show advertisement / ظهور الإعلان'}
+ const order=base.getElementById('kOrder'),orderOp=order?.closest('.k-op');if(orderOp)orderOp.style.display='none';
+ const duration=base.getElementById('kDuration'),durationOp=duration?.closest('.k-op');
+ if(durationOp&&!base.getElementById('kDurationBox')){const dbox=base.createElement('div');dbox.id='kDurationBox';box.insertAdjacentElement('afterend',dbox);dbox.appendChild(durationOp);const lab=durationOp.querySelector('label');if(lab)lab.textContent='Ad duration / مدة الإعلان (seconds)'}
+ const note=box.querySelector('.k-op-note');if(note)note.textContent='This switch controls whether the advertisement appears on the physical display. Display order is managed only by drag & drop.';
+ function paint(){const on=active?.checked!==false;if(activeText)activeText.textContent=on?'Visible / يظهر':'Hidden / مخفي';box.classList.toggle('k-visible',on);box.classList.toggle('k-hidden',!on)}
+ if(active&&active.dataset.kVisibilityBound!=='1'){active.dataset.kVisibilityBound='1';active.addEventListener('change',paint)}paint();
+ if(bar){const pill=bar.querySelector('.pill');if(pill)pill.textContent='V3.10';bar.title='KWEIDER Screen Control V3.10'}
+ base.title='KWEIDER Screen Admin — Visibility';return true
+ }catch(e){return false}}
+host.addEventListener('load',()=>setTimeout(tune,900));setInterval(tune,700);
+})();
+</script>
+</body>
+</html>
