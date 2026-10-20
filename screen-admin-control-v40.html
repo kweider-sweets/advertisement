@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control V4.0 — Text Colors</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#host{display:block;width:100%;height:100%;border:0;background:#080808}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v310.html?v=400" title="KWEIDER Screen Control V4.0"></iframe>
+<script>
+(()=>{'use strict';
+const URL='https://hbloyloryxksbsornjlg.supabase.co',KEY='sb_publishable_6oq2EgVDzMHkzxlRgwFdSw_MPU2DmaN';
+const db=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true}}),host=document.getElementById('host');
+const DEFAULTS={en:'#f3d98d',ar:'#c5a059',old:'#f5ead0',price:'#f3d98d',footerAr:'#dbc783',footerEn:'#bba96e'};
+const LABELS={en:'English title',ar:'Arabic title',old:'Secondary line',price:'Main price',footerAr:'Arabic footer',footerEn:'English footer'};
+const PREVIEW={en:'pEn',ar:'pAr',old:'pOld',price:'pPrice',footerAr:'pArFooter',footerEn:'pEnFooter'};
+let lastId=null,loading=false;
+function allDocs(doc,out=[],depth=0){if(!doc||depth>24)return out;out.push(doc);try{for(const f of doc.querySelectorAll('iframe')){try{if(f.contentDocument)allDocs(f.contentDocument,out,depth+1)}catch(_){}}}catch(_){}return out}
+function ctx(){const docs=allDocs(host.contentDocument||document);let drawerDoc=null,base=null,bar=null;for(const d of docs){if(!drawerDoc&&d.getElementById('drawer')&&d.getElementById('fontGrid'))drawerDoc=d;if(!base&&d.getElementById('adList')&&d.getElementById('saveDraft'))base=d;if(!bar&&d.getElementById('historyBtn')&&d.querySelector?.('.bar .right'))bar=d}return{drawerDoc,base,bar}}
+function currentId(base){const b=base?.querySelector('.ad-btn.active'),m=b?.textContent.match(/Ad\s+(\d+)/i);return m?Number(m[1]):1}
+function valid(v,d){v=String(v||'').trim();return /^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():d}
+function ensureCard(d){if(!d||d.getElementById('kTextColorCard'))return;const st=d.createElement('style');st.id='kTextColorStyle';st.textContent=`
+#kTextColorCard .kc-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.kc-field{border:1px solid #30291f;border-radius:9px;padding:8px;background:#0a0a09}.kc-field label{display:block;color:#cbbfa8;font-size:10px;margin-bottom:6px}.kc-row{display:grid;grid-template-columns:44px 1fr;gap:7px;align-items:center}.kc-row input[type=color]{width:44px;height:34px;padding:0;border:1px solid #5b4b32;border-radius:7px;background:#090909}.kc-row input[type=text]{width:100%;background:#080808;color:#fff;border:1px solid #352d22;border-radius:7px;padding:8px;font-size:10px;text-transform:uppercase}.kc-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.kc-btn{border:1px solid #78652f;background:#15120e;color:#ead68e;border-radius:8px;padding:8px 10px;font-size:10px;font-weight:900;cursor:pointer}.kc-btn.primary{background:linear-gradient(135deg,#7a5a11,#c9a53e);color:#080706}.kc-note{font-size:9px;color:#9d927f;line-height:1.45;margin-top:8px}.kc-status{font-size:10px;color:#a99d89;margin-top:8px;min-height:15px}.kc-status.ok{color:#9bd292}.kc-status.bad{color:#efa3a3}@media(max-width:560px){#kTextColorCard .kc-grid{grid-template-columns:1fr}}
+`;d.head.appendChild(st);
+ const card=d.createElement('div');card.id='kTextColorCard';card.className='card';card.innerHTML=`<div class="ct">Text Colors / ألوان الكتابة</div><div class="kc-grid">${Object.keys(DEFAULTS).map(k=>`<div class="kc-field"><label>${LABELS[k]}</label><div class="kc-row"><input id="kc_${k}" data-kc="${k}" type="color" value="${DEFAULTS[k]}"><input id="kch_${k}" data-kch="${k}" type="text" maxlength="7" value="${DEFAULTS[k]}"></div></div>`).join('')}</div><div class="kc-actions"><button type="button" class="kc-btn" id="kcReset">Reset Colors</button><button type="button" class="kc-btn primary" id="kcSave">Save Text Colors</button></div><div class="kc-note">Each line can have its own colour. Changes appear instantly in the live preview and are saved per advertisement.</div><div class="kc-status" id="kcStatus"></div>`;
+ const fontCard=d.getElementById('fontGrid')?.closest('.card');if(fontCard)fontCard.insertAdjacentElement('afterend',card);else d.getElementById('drawer')?.appendChild(card);
+ d.querySelectorAll('[data-kc]').forEach(el=>el.addEventListener('input',()=>{const k=el.dataset.kc,h=d.getElementById('kch_'+k);if(h)h.value=el.value.toUpperCase();applyPreview(d)}));
+ d.querySelectorAll('[data-kch]').forEach(el=>el.addEventListener('change',()=>{const k=el.dataset.kch,c=d.getElementById('kc_'+k),v=valid(el.value,DEFAULTS[k]);el.value=v.toUpperCase();if(c)c.value=v;applyPreview(d)}));
+ d.getElementById('kcReset').onclick=()=>{writeColors(d,DEFAULTS);applyPreview(d);setStatus(d,'Colors reset locally. Save to Draft if you want to keep them.','ok')};
+ d.getElementById('kcSave').onclick=()=>saveColors(d);
+}
+function readColors(d){const out={};for(const k of Object.keys(DEFAULTS))out[k]=valid(d.getElementById('kc_'+k)?.value,DEFAULTS[k]);return out}
+function writeColors(d,colors){const c={...DEFAULTS,...(colors||{})};for(const k of Object.keys(DEFAULTS)){const v=valid(c[k],DEFAULTS[k]),p=d.getElementById('kc_'+k),h=d.getElementById('kch_'+k);if(p)p.value=v;if(h)h.value=v.toUpperCase()}}
+function applyPreview(d){const {base}=ctx();if(!base)return;const c=readColors(d);for(const k of Object.keys(PREVIEW)){const el=base.getElementById(PREVIEW[k]);if(el)el.style.color=c[k]}}
+function setStatus(d,t,cls=''){const e=d.getElementById('kcStatus');if(e){e.textContent=t;e.className='kc-status'+(cls?' '+cls:'')}}
+async function loadColors(id,d){if(loading)return;loading=true;try{const [{data:dr,error:de},{data:pu,error:pe}]=await Promise.all([db.from('screen_ads_draft').select('content').eq('id',id).maybeSingle(),db.from('screen_ads_public').select('content').eq('id',id).maybeSingle()]);if(de)throw de;if(pe)throw pe;writeColors(d,dr?.content?.visual?.colors||pu?.content?.visual?.colors||DEFAULTS);applyPreview(d);setStatus(d,`Loaded text colours for Ad ${id}.`,'ok')}catch(e){writeColors(d,DEFAULTS);applyPreview(d);setStatus(d,'Could not load saved colours: '+(e.message||e),'bad')}finally{loading=false}}
+async function saveColors(d){const {base}=ctx();if(!base)return setStatus(d,'Advertisement preview is not ready.','bad');const id=currentId(base);try{setStatus(d,'Saving text colours…');const {data:{user}}=await db.auth.getUser();if(!user)throw new Error('Admin session not found');const [{data:dr,error:de},{data:pu,error:pe}]=await Promise.all([db.from('screen_ads_draft').select('content').eq('id',id).maybeSingle(),db.from('screen_ads_public').select('content').eq('id',id).maybeSingle()]);if(de)throw de;if(pe)throw pe;let current={};try{current=typeof base.defaultView?.dataFor==='function'?base.defaultView.dataFor(id)||{}:{}}catch(_){}const existing=dr?.content||pu?.content||{},visual={...(existing.visual||{}),colors:readColors(d)},content={...current,...existing,visual};const {error}=await db.from('screen_ads_draft').upsert({id,content},{onConflict:'id'});if(error)throw error;setStatus(d,`Ad ${id}: text colours saved to secure Draft.`,'ok')}catch(e){setStatus(d,'Save failed: '+(e.message||e),'bad')}}
+function tune(){try{const {drawerDoc:d,base,bar}=ctx();if(!d||!base)return false;ensureCard(d);const id=currentId(base);if(id!==lastId){lastId=id;loadColors(id,d)}else applyPreview(d);const exp=d.getElementById('exportBtn');if(exp){exp.textContent='Open V15 Exporter';exp.onclick=()=>window.open('screen-export-production-v15.html?v=15','_blank','noopener')}if(bar){const p=bar.querySelector('.pill');if(p)p.textContent='V4.0';bar.title='KWEIDER Screen Control V4.0'}return true}catch(_){return false}}
+host.addEventListener('load',()=>setTimeout(tune,1100));setInterval(tune,750);
+})();
+</script>
+</body>
+</html>
