@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Production MP4 Exporter V13</title>
+<style>html,body{margin:0;min-height:100%;background:#070707;color:#f3d98d;font-family:Arial,sans-serif}.boot{min-height:100vh;display:grid;place-items:center;text-align:center;padding:24px}.boot b{display:block;font-size:22px;letter-spacing:.08em}.boot span{display:block;margin-top:10px;color:#bcae91;font-size:13px}</style>
+</head>
+<body><div class="boot"><div><b>KWEIDER PRODUCTION EXPORTER V13</b><span>Loading V12 typography + motion with luxury image FX…</span></div></div>
+<script>
+(async()=>{'use strict';try{
+ const r=await fetch('screen-export-production-v12.html?v=12',{cache:'no-store'});if(!r.ok)throw new Error('Could not load V12 base: HTTP '+r.status);let src=await r.text();
+ src=src.replaceAll('PRODUCTION EXPORTER V12','PRODUCTION EXPORTER V13').replaceAll('Production MP4 Exporter V12','Production MP4 Exporter V13').replaceAll('Exporter V12','Exporter V13');
+ src=src.replace("html.replaceAll('PRODUCTION EXPORTER V8','PRODUCTION EXPORTER V12')","html.replaceAll('PRODUCTION EXPORTER V8','PRODUCTION EXPORTER V13')");
+ src=src.replace("html.replaceAll('Production MP4 Exporter V8','Production MP4 Exporter V12')","html.replaceAll('Production MP4 Exporter V8','Production MP4 Exporter V13')");
+ src=src.replace("html.replaceAll('Exporter V8','Exporter V12')","html.replaceAll('Exporter V8','Exporter V13')");
+ const needle='document.open();document.write(html);document.close();';
+ if(!src.includes(needle))throw new Error('V12 final write marker not found.');
+ const inject=`
+const fxMarker='function drawScene(ctx,ad,t,dur){';
+const fxHelpers=\`function imageFxState(ad,t,dur){const f=ad?.visual?.imageFx||{},type=f.type||'static',k=clamp(Number(f.intensity??35)/100,0,1),speed=clamp(Number(f.speed??1),.5,2),dir=f.direction==='rtl'?-1:f.direction==='ltr'?1:(Number(ad.id)%2?1:-1),loop=f.loop!==false;if(type==='static'||k<=0)return{x:0,y:0,s:1,sheen:0,p:0,dir};const cycle=Math.max(2.2,7/speed),p=loop?((Math.max(0,t)%cycle)/cycle):clamp(Math.max(0,t)/cycle,0,1),a=2*Math.PI*p;let x=0,y=0,s=1,sheen=0;if(type==='soft-float'||type==='float-sheen'){x=dir*18*k*Math.sin(a);y=-8*k*Math.sin(a*2+.35)}if(type==='breathing'){s=1+.035*k*(.5-.5*Math.cos(a))}if(type==='sheen'||type==='float-sheen')sheen=k;return{x,y,s,sheen,p,dir}}\nfunction drawLuxurySheen(ctx,bmp,x,y,w,h,fx){if(!bmp||fx.sheen<=0)return;const travel=w*1.55,pos=fx.dir>0?x-w*.28+travel*fx.p:x+w*1.28-travel*fx.p,band=Math.max(22,w*.065);ctx.save();ctx.globalCompositeOperation='screen';ctx.filter='brightness(1.48) saturate(1.04)';for(let i=-3;i<=3;i++){const weight=1-Math.abs(i)/4;ctx.save();ctx.beginPath();ctx.rect(pos+i*band*.34-band*.5,y,band,h);ctx.clip();ctx.globalAlpha=.12*fx.sheen*weight;ctx.drawImage(bmp,x,y,w,h);ctx.restore()}ctx.restore()}\n\`;
+if(!html.includes(fxMarker))throw new Error('V12 drawScene marker not found for Image FX.');
+html=html.replace(fxMarker,fxHelpers+fxMarker);
+html=html.replace("bmp=images.get(ad.id);if(bmp){const m=motion(t,dur,ad.id)","bmp=images.get(ad.id),imgFx=imageFxState(ad,t,dur);if(bmp){const m=motion(t,dur,ad.id)");
+html=html.replace("scale=fit*Number(ad.zoom||1)*m.s*(imageM?imageM.s:1),cx=1620+Number(ad.x||0)/100*HALF_W+m.x+(imageM?imageM.x:0),cy=960+Number(ad.y||0)/100*FULL_H+m.y+(imageM?imageM.y:0)","scale=fit*Number(ad.zoom||1)*m.s*(imageM?imageM.s:1)*imgFx.s,cx=1620+Number(ad.x||0)/100*HALF_W+m.x+(imageM?imageM.x:0)+imgFx.x,cy=960+Number(ad.y||0)/100*FULL_H+m.y+(imageM?imageM.y:0)+imgFx.y");
+html=html.replace("ctx.drawImage(bmp,cx-w/2,cy-h/2,w,h);ctx.restore()}","ctx.drawImage(bmp,cx-w/2,cy-h/2,w,h);ctx.restore();if(imgFx.sheen>0)drawLuxurySheen(ctx,bmp,cx-w/2,cy-h/2,w,h,imgFx)}");
+html=html.replace('V12: V11 zero-black/no-freeze transition engine plus per-ad typography and cinematic entrance controls. Default settings reproduce the approved V11 behaviour.','V13: V12 typography + cinematic entrance controls, plus luxury continuous image motion and soft product-only light sweep. Zero-black/no-freeze transitions remain preserved.');
+html=html.replace('Deterministic frame renderer · V11 transitions · typography + motion controls','Deterministic renderer · V11 transitions · typography + motion + luxury image FX');
+html=html.replace('<div class="pill">ZERO BLACK / NO FREEZE</div>','<div class="pill">ZERO BLACK / NO FREEZE</div><div class="pill">LUXURY IMAGE FX</div>');
+`;
+ src=src.replace(needle,inject+'\n'+needle);
+ document.open();document.write(src);document.close();
+}catch(err){document.body.innerHTML='<div class="boot"><div><b>V13 LOAD ERROR</b><span>'+String(err&&err.message||err)+'</span></div></div>';console.error(err)}})();
+</script>
+</body></html>
