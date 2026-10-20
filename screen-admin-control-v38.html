@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control V3.8 — Luxury Image FX</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#host{display:block;width:100%;height:100%;border:0;background:#080808}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v37.html?v=38" title="KWEIDER Screen Control V3.8"></iframe>
+<script>
+(()=>{'use strict';
+const URL='https://hbloyloryxksbsornjlg.supabase.co',KEY='sb_publishable_6oq2EgVDzMHkzxlRgwFdSw_MPU2DmaN';
+const db=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true}}),host=document.getElementById('host');
+const IMG_DEFAULT={type:'static',intensity:35,speed:1,direction:'auto',loop:true};let lastId=null,boundSave=null,boundReset=null;
+function allDocs(doc,out=[],depth=0){if(!doc||depth>16)return out;out.push(doc);try{for(const f of doc.querySelectorAll('iframe')){try{if(f.contentDocument)allDocs(f.contentDocument,out,depth+1)}catch(_){}}}catch(_){}return out}
+function getCtx(){const docs=allDocs(host.contentDocument||document);let drawerDoc=null,base=null,barDoc=null;for(const d of docs){if(!drawerDoc&&d.getElementById('drawer')&&d.getElementById('fontGrid'))drawerDoc=d;if(!base&&d.getElementById('adList')&&d.getElementById('saveDraft'))base=d;if(!barDoc&&d.querySelector?.('.bar .right')&&d.getElementById('historyBtn'))barDoc=d}return{drawerDoc,base,barDoc}}
+function currentId(base){const b=base?.querySelector('.ad-btn.active'),m=b?.textContent.match(/Ad\s+(\d+)/i);return m?Number(m[1]):1}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}function num(v,d){const n=Number(v);return Number.isFinite(n)?n:d}
+function ensureCard(d){if(!d||d.getElementById('kImageFxCard'))return;const s=d.createElement('style');s.textContent=`
+#kImageFxCard .kfx-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.kfx-field label{display:flex;justify-content:space-between;color:#cbbfa8;font-size:10px;margin-bottom:5px}.kfx-field select,.kfx-field input[type=number]{width:100%;background:#080808;color:#fff;border:1px solid #352d22;border-radius:7px;padding:7px 6px;font-size:10px}.kfx-field input[type=range]{width:100%;accent-color:#c5a059}.kfx-check{display:flex;align-items:center;gap:8px;border:1px solid #352d22;background:#080808;border-radius:7px;padding:7px 8px;color:#d5c8ad;font-size:10px}.kfx-check input{accent-color:#c5a059}.kfx-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.kfx-btn{border:1px solid #78652f;background:#15120e;color:#ead68e;border-radius:8px;padding:8px 10px;font-size:10px;font-weight:900;cursor:pointer}.kfx-note{font-size:9px;color:#9d927f;line-height:1.5;margin-top:8px}`;d.head.appendChild(s);
+const card=d.createElement('div');card.id='kImageFxCard';card.className='card';card.innerHTML=`<div class="ct">Luxury Image FX / حركة ولمعان الصورة</div><div class="kfx-grid">
+<div class="kfx-field"><label>Image style</label><select id="kfxType"><option value="static">Static — ثابت</option><option value="soft-float">Soft Float — حركة ناعمة</option><option value="breathing">Breathing Zoom — زوم تنفّس</option><option value="sheen">Light Sweep — لمعة راقية</option><option value="float-sheen">Float + Sweep — حركة + لمعة</option></select></div>
+<div class="kfx-field"><label>Direction</label><select id="kfxDirection"><option value="auto">Auto</option><option value="ltr">Left → Right</option><option value="rtl">Right → Left</option></select></div>
+<div class="kfx-field"><label>Intensity <b id="kfxIntensityV">35%</b></label><input id="kfxIntensity" type="range" min="0" max="100" step="1" value="35"></div>
+<div class="kfx-field"><label>Speed <b id="kfxSpeedV">1.00×</b></label><input id="kfxSpeed" type="range" min="0.50" max="2.00" step="0.05" value="1"></div>
+<div class="kfx-check"><input id="kfxLoop" type="checkbox" checked><span>Loop continuously / تكرار الحركة</span></div>
+<div class="kfx-actions"><button type="button" class="kfx-btn" id="kfxPreview">Preview Image FX</button></div>
+</div><div class="kfx-note">Luxury-safe effects only: slow movement, restrained zoom and a soft light sweep. No strobe or harsh flashing.</div>`;
+const cards=[...d.querySelectorAll('#drawer .card')];const actionCard=cards[cards.length-1];(actionCard?.parentNode||d.getElementById('drawer')).insertBefore(card,actionCard||null);
+d.getElementById('kfxIntensity').oninput=()=>{d.getElementById('kfxIntensityV').textContent=d.getElementById('kfxIntensity').value+'%';previewFx(d)};
+d.getElementById('kfxSpeed').oninput=()=>{d.getElementById('kfxSpeedV').textContent=Number(d.getElementById('kfxSpeed').value).toFixed(2)+'×';previewFx(d)};
+d.getElementById('kfxType').onchange=()=>previewFx(d);d.getElementById('kfxDirection').onchange=()=>previewFx(d);d.getElementById('kfxLoop').onchange=()=>previewFx(d);d.getElementById('kfxPreview').onclick=()=>previewFx(d);
+const exp=d.getElementById('exportBtn');if(exp){exp.textContent='Open V13 Exporter';exp.onclick=()=>window.open('screen-export-production-v13.html?v=13','_blank','noopener')}
+}
+function readFx(d){return{type:d.getElementById('kfxType')?.value||'static',intensity:clamp(num(d.getElementById('kfxIntensity')?.value,35),0,100),speed:clamp(num(d.getElementById('kfxSpeed')?.value,1),.5,2),direction:d.getElementById('kfxDirection')?.value||'auto',loop:d.getElementById('kfxLoop')?.checked!==false}}
+function writeFx(d,fx){fx={...IMG_DEFAULT,...(fx||{})};d.getElementById('kfxType').value=fx.type;d.getElementById('kfxDirection').value=fx.direction;d.getElementById('kfxIntensity').value=fx.intensity;d.getElementById('kfxIntensityV').textContent=fx.intensity+'%';d.getElementById('kfxSpeed').value=fx.speed;d.getElementById('kfxSpeedV').textContent=Number(fx.speed).toFixed(2)+'×';d.getElementById('kfxLoop').checked=fx.loop!==false}
+function clearFxPreview(d){const img=findPreviewImage();if(img){img.getAnimations?.().forEach(a=>a.cancel());img.style.filter=''}const old=d.getElementById('kfxSheenPreview');if(old)old.remove()}
+function findPreviewImage(){const {base}=getCtx();return base?.getElementById('pImg')||null}
+function previewFx(d){const img=findPreviewImage();if(!img)return;clearFxPreview(d);const fx=readFx(d);if(fx.type==='static')return;const k=fx.intensity/100,cycle=Math.max(1800,7000/fx.speed),base=img.style.transform||'',sign=fx.direction==='rtl'?-1:1;
+if(fx.type==='soft-float'||fx.type==='float-sheen'){img.animate([{transform:`${base} translate(0px,0px)`},{transform:`${base} translate(${sign*18*k}px,${-8*k}px)`},{transform:`${base} translate(0px,0px)`},{transform:`${base} translate(${-sign*14*k}px,${6*k}px)`},{transform:`${base} translate(0px,0px)`}],{duration:cycle,iterations:fx.loop?Infinity:1,easing:'ease-in-out'})}
+if(fx.type==='breathing'){img.animate([{transform:`${base} scale(1)`},{transform:`${base} scale(${1+.035*k})`},{transform:`${base} scale(1)`}],{duration:cycle,iterations:fx.loop?Infinity:1,easing:'ease-in-out'})}
+if(fx.type==='sheen'||fx.type==='float-sheen'){const stage=img.parentElement;if(stage){const sh=d.createElement('div');sh.id='kfxSheenPreview';Object.assign(sh.style,{position:'absolute',top:'-15%',bottom:'-15%',width:'16%',pointerEvents:'none',zIndex:'8',background:'linear-gradient(90deg,transparent,rgba(255,246,215,'+(0.10+.18*k)+'),transparent)',filter:'blur(5px)',transform:'skewX(-12deg)',left:fx.direction==='rtl'?'110%':'-25%'});stage.appendChild(sh);sh.animate(fx.direction==='rtl'?[{left:'110%',opacity:0},{opacity:1,offset:.18},{left:'-25%',opacity:0}]:[{left:'-25%',opacity:0},{opacity:1,offset:.18},{left:'110%',opacity:0}],{duration:Math.max(2200,5200/fx.speed),iterations:fx.loop?Infinity:1,easing:'ease-in-out'})}}
+}
+function readVisual(d){const fontSizes={};for(const k of ['badge','en','ar','old','price','footerAr','footerEn'])fontSizes[k]=num(d.getElementById('f_'+k)?.value,({badge:34,en:100,ar:72,old:47,price:182,footerAr:43,footerEn:31})[k]);const motion={};for(const k of ['badge','title','price','footer','image'])motion[k]={effect:d.getElementById('m_'+k+'_effect')?.value||'default',duration:clamp(num(d.getElementById('m_'+k+'_duration')?.value,.7),.15,2.5),delay:clamp(num(d.getElementById('m_'+k+'_delay')?.value,0),0,3)};return{fontSizes,motion,imageFx:readFx(d)}}
+async function loadFx(id,d){try{const [{data:dr},{data:pu}]=await Promise.all([db.from('screen_ads_draft').select('content').eq('id',id).maybeSingle(),db.from('screen_ads_public').select('content').eq('id',id).maybeSingle()]);writeFx(d,dr?.content?.visual?.imageFx||pu?.content?.visual?.imageFx||IMG_DEFAULT)}catch(_){writeFx(d,IMG_DEFAULT)}}
+async function saveAll(e,d,base){e.preventDefault();e.stopImmediatePropagation();const id=currentId(base),st=d.getElementById('status');try{if(st){st.textContent='Saving typography, motion and image FX…';st.className='status'}const [{data:dr,error:de},{data:pu,error:pe}]=await Promise.all([db.from('screen_ads_draft').select('content').eq('id',id).maybeSingle(),db.from('screen_ads_public').select('content').eq('id',id).maybeSingle()]);if(de)throw de;if(pe)throw pe;let cur={};try{cur=typeof base.defaultView?.dataFor==='function'?base.defaultView.dataFor(id)||{}:{}}catch(_){}const existing=dr?.content||pu?.content||{};const content={...cur,...existing,visual:readVisual(d)};const {error}=await db.from('screen_ads_draft').upsert({id,content},{onConflict:'id'});if(error)throw error;if(st){st.textContent=`Ad ${id}: visual settings + luxury image FX saved to secure Draft.`;st.className='status ok'}}catch(err){if(st){st.textContent='Save failed: '+(err.message||err);st.className='status bad'}}}
+function tune(){try{const {drawerDoc:d,base,barDoc}=getCtx();if(!d||!base)return false;ensureCard(d);const id=currentId(base);if(id!==lastId){lastId=id;loadFx(id,d)}const save=d.getElementById('saveBtn');if(save&&save!==boundSave){if(boundSave){}boundSave=save;save.addEventListener('click',e=>saveAll(e,d,base),true)}const reset=d.getElementById('resetBtn');if(reset&&reset!==boundReset){boundReset=reset;reset.addEventListener('click',()=>{writeFx(d,IMG_DEFAULT);clearFxPreview(d)},false)}if(barDoc){const pill=barDoc.querySelector('.pill');if(pill)pill.textContent='V3.8';barDoc.title='KWEIDER Screen Control V3.8'}return true}catch(_){return false}}
+host.addEventListener('load',()=>setTimeout(tune,700));setInterval(tune,650);
+})();
+</script>
+</body>
+</html>
