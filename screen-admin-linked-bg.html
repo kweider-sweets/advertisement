@@ -18,7 +18,8 @@ const THEMES={
   'espresso':{name:'Espresso',color:'#120b07'},
   'burgundy':{name:'Deep Burgundy',color:'#16080b'},
   'midnight':{name:'Midnight Navy',color:'#070b14'},
-  'charcoal-gold':{name:'Charcoal Gold',color:'#11100d'}
+  'charcoal-gold':{name:'Charcoal Gold',color:'#11100d'},
+  'luxury-cream':{name:'Luxury Cream / كريم فاخر',color:'#e9dcc4'}
 };
 const GLOBAL_KEY='kweider-screen-background-global-v1';
 const OVERRIDE_KEY='kweider-screen-background-overrides-v1';
@@ -45,7 +46,7 @@ function inject(){
     <h3>Background / أرضية الشاشتين <span class="k-linked">LINKED</span></h3>
     <div class="k-scope"><button id="kGlobal" class="active">Global — all ads</button><button id="kAd">This ad only</button></div>
     <label style="display:block;color:#cfc4b0;font-size:12px;margin-bottom:6px">Luxury background theme</label>
-    <select id="kTheme" class="k-select"><option value="luxury-black">Luxury Black</option><option value="warm-black">Warm Black</option><option value="espresso">Espresso</option><option value="burgundy">Deep Burgundy</option><option value="midnight">Midnight Navy</option><option value="charcoal-gold">Charcoal Gold</option><option value="custom">Custom colour</option></select>
+    <select id="kTheme" class="k-select"><option value="luxury-black">Luxury Black</option><option value="warm-black">Warm Black</option><option value="espresso">Espresso</option><option value="burgundy">Deep Burgundy</option><option value="midnight">Midnight Navy</option><option value="charcoal-gold">Charcoal Gold</option><option value="luxury-cream">Luxury Cream / كريم فاخر</option><option value="custom">Custom colour</option></select>
     <div class="k-swatches">${Object.entries(THEMES).map(([k,v])=>`<button type="button" class="k-swatch" data-theme="${k}" title="${v.name}" style="background:${v.color}"></button>`).join('')}</div>
     <div class="k-colour"><input id="kColor" type="color" value="#050505"><input id="kHex" type="text" maxlength="7" value="#050505"></div>
     <div class="k-meta" id="kMeta">One continuous background across both screens. V3 lighting remains above it.</div>`;
