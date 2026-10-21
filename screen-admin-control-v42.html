@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control V4.2 — Unified V15 Export</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#host{display:block;width:100%;height:100%;border:0;background:#080808}</style>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v41.html?v=420" title="KWEIDER Screen Control V4.2"></iframe>
+<script>
+(()=>{'use strict';
+const host=document.getElementById('host');
+function allDocs(doc,out=[],depth=0){if(!doc||depth>30)return out;out.push(doc);try{for(const f of doc.querySelectorAll('iframe')){try{if(f.contentDocument)allDocs(f.contentDocument,out,depth+1)}catch(_){}}}catch(_){}return out}
+function patch(){try{
+ const docs=allDocs(host.contentDocument||document);let found=false;
+ for(const d of docs){
+   const old=d.getElementById('mp4ExportBtn');
+   if(old){old.textContent='Production MP4 V15 / تصدير نهائي';old.title='Production Exporter V15 · Text Colors · Premium Motion · Zero Black / No Freeze';old.onclick=()=>window.open('screen-export-production-v15.html?v=15','_blank','noopener');found=true}
+   const exp=d.getElementById('exportBtn');
+   if(exp&&/Exporter/i.test(exp.textContent||'')){exp.textContent='Open V15 Exporter';exp.onclick=()=>window.open('screen-export-production-v15.html?v=15','_blank','noopener');found=true}
+   const pill=d.querySelector?.('.bar .pill');if(pill&&/V3\.|V4\./.test(pill.textContent||''))pill.textContent='V4.2';
+ }
+ return found;
+ }catch(_){return false}}
+host.addEventListener('load',()=>setTimeout(patch,1100));setInterval(patch,500);
+})();
+</script>
+</body>
+</html>
