@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control V4.5 — Stable Export</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#host{display:block;width:100%;height:100%;border:0;background:#080808}</style>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v44.html?v=450" title="KWEIDER Screen Control V4.5"></iframe>
+<script>
+(()=>{'use strict';
+const host=document.getElementById('host');
+function allDocs(doc,out=[],depth=0){if(!doc||depth>40)return out;out.push(doc);try{for(const f of doc.querySelectorAll('iframe')){try{if(f.contentDocument)allDocs(f.contentDocument,out,depth+1)}catch(_){}}}catch(_){}return out}
+function freezeExportButtons(){try{
+ const docs=allDocs(host.contentDocument||document);let changed=false;
+ for(const d of docs){
+   let top=d.getElementById('mp4ExportBtn');
+   if(top){
+     top.id='mp4ExportStableV17';
+     top.textContent='Production MP4 V17 / تصدير نهائي';
+     top.title='Stable Production Exporter V17 · Scene FX · Text Colors · Zero Black / No Freeze';
+     top.onclick=()=>window.open('screen-export-production-v17.html?v=17','_blank','noopener');
+     changed=true;
+   }
+   const stableTop=d.getElementById('mp4ExportStableV17');
+   if(stableTop){stableTop.textContent='Production MP4 V17 / تصدير نهائي';stableTop.onclick=()=>window.open('screen-export-production-v17.html?v=17','_blank','noopener')}
+
+   let exp=d.getElementById('exportBtn');
+   if(exp&&/Exporter/i.test(exp.textContent||'')){
+     exp.id='exportStableV17';
+     exp.textContent='Open V17 Exporter';
+     exp.onclick=()=>window.open('screen-export-production-v17.html?v=17','_blank','noopener');
+     changed=true;
+   }
+   const stableExp=d.getElementById('exportStableV17');
+   if(stableExp){stableExp.textContent='Open V17 Exporter';stableExp.onclick=()=>window.open('screen-export-production-v17.html?v=17','_blank','noopener')}
+
+   const pill=d.querySelector?.('.bar .pill');if(pill&&/^V[34]\./.test(pill.textContent||''))pill.textContent='V4.5';
+ }
+ return changed;
+ }catch(_){return false}}
+host.addEventListener('load',()=>setTimeout(freezeExportButtons,1200));
+setTimeout(freezeExportButtons,1800);
+setTimeout(freezeExportButtons,3000);
+})();
+</script>
+</body>
+</html>
