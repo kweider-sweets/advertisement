@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KWEIDER Screen Admin — Unified Cinematic Preview</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{--gold:#c5a059;--gold2:#f3d98d;--bg:#080808;--line:#30291f;--muted:#b6aa94}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Arial,sans-serif;color:#fff}#adminFrame{display:block;width:100%;height:100%;border:0;background:#080808}.floating{position:fixed;right:24px;bottom:24px;z-index:40}.preview-btn{border:1px solid #d8bb66;border-radius:12px;padding:13px 18px;background:linear-gradient(135deg,#8b650f,#d1ae44);color:#090704;font-weight:800;cursor:pointer;box-shadow:0 12px 34px rgba(0,0,0,.52)}.modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.92);display:none;grid-template-rows:auto 1fr}.modal.open{display:grid}.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 18px;border-bottom:1px solid var(--line);background:#0d0d0d}.bar-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.title{font-weight:800;color:var(--gold2)}.pill{padding:4px 9px;border:1px solid #55472f;border-radius:999px;color:#dcc47d;font-size:11px}.status{color:var(--muted);font-size:12px}.buttons{display:flex;gap:8px}.btn{border:1px solid #8b7443;background:#14120e;color:#ead89f;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer}.btn.primary{background:#d1ae44;color:#090704}.btn.close{border-color:#5a4040;color:#efb1b1}.stage{min-height:0;display:grid;place-items:center;padding:14px;background:#000}.screen-shell{position:relative;height:100%;max-height:calc(100vh - 82px);aspect-ratio:1210/1078;max-width:100%;background:#000;border:1px solid #3b3225;overflow:hidden}.screen-shell iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+</style>
+</head>
+<body>
+<iframe id="adminFrame" src="screen-admin.html" title="KWEIDER screen admin"></iframe>
+<div class="floating"><button class="preview-btn" id="openPreview">▶ Cinematic Preview</button></div>
+<div class="modal" id="modal"><div class="bar"><div class="bar-left"><span class="title" id="previewTitle">Cinematic Preview</span><span class="pill">UNIFIED</span><span class="status" id="status">Preparing preview…</span></div><div class="buttons"><button class="btn primary" id="replay">Replay</button><button class="btn" id="fullscreen">Full screen</button><button class="btn close" id="close">Close</button></div></div><div class="stage"><div class="screen-shell" id="screenShell"><iframe id="cineFrame" src="winter-luxury-v3.html?unified=1" title="KWEIDER cinematic preview"></iframe></div></div></div>
+<script>
+(()=>{'use strict';
+const URL='https://hbloyloryxksbsornjlg.supabase.co',KEY='sb_publishable_6oq2EgVDzMHkzxlRgwFdSw_MPU2DmaN';
+const db=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true}}),$=id=>document.getElementById(id);
+const ONLINE=new Set([5,10,15,20,25]),ATELIER=new Set([4,9,12,13,14,19]),HERITAGE=new Set([1,6,7,17]);
+let renderTimer=null;
+function family(id){if(ONLINE.has(id))return'online';if(ATELIER.has(id))return'atelier';if(HERITAGE.has(id))return'heritage';return'imperial'}
+function adminDoc(){try{return $('adminFrame').contentDocument}catch(_){return null}}
+function currentId(){const d=adminDoc(),b=d?.querySelector('.ad-btn.active'),m=b?.textContent.match(/Ad\s+(\d+)/i);return m?Number(m[1]):1}
+function val(id){return adminDoc()?.getElementById(id)?.value||''}
+function imageSrc(){const img=adminDoc()?.getElementById('pImg');return img?.src||currentId()+'.webp'}
+function currentAd(){const id=currentId();return{id,arLines:[val('titleEn')],enLines:[val('titleAr')],price:val('price'),oldPrice:val('oldPrice'),save:val('save'),labelAr:val('labelAr'),labelEn:val('labelEn'),img:imageSrc(),duration:7000,repeat:1,motion:id}}
+function cineContext(){try{const od=$('cineFrame').contentDocument,inner=od?.getElementById('screen');return inner?.contentDocument?{iw:inner.contentWindow,d:inner.contentDocument}:null}catch(_){return null}}
+async function savedContent(id){try{const [{data:d},{data:p}]=await Promise.all([db.from('screen_ads_draft').select('content').eq('id',id).maybeSingle(),db.from('screen_ads_public').select('content').eq('id',id).maybeSingle()]);return d?.content||p?.content||{}}catch(_){return{}}}
+function setImportant(el,prop,val){if(el&&val!=null)el.style.setProperty(prop,String(val),'important')}
+function applyVisual(slide,content){const v=content.visual||{},fs=v.fontSizes||{},c=v.colors||{};
+ const badge=slide.querySelector('.save-badge');setImportant(badge,'font-size',(fs.badge||34)+'px');setImportant(badge,'color',c.badgeText||'#090704');if(c.badgeBg)setImportant(badge,'background',c.badgeBg);
+ const en=slide.querySelector('.ad-title-ar'),ar=slide.querySelector('.ad-title-en');setImportant(en,'font-size',(fs.en||100)+'px');setImportant(en,'color',c.en||'#F3D98D');setImportant(ar,'font-size',(fs.ar||72)+'px');setImportant(ar,'color',c.ar||'#C5A059');
+ const old=slide.querySelector('.old-price-wrap');setImportant(old,'font-size',(fs.old||47)+'px');setImportant(old,'color',c.old||'#F5EAD0');const price=slide.querySelector('.new-price');setImportant(price,'font-size',(fs.price||182)+'px');setImportant(price,'color',c.price||'#F3D98D');
+ const fa=slide.querySelector('.ad-footer-ar'),fe=slide.querySelector('.ad-footer-en');setImportant(fa,'font-size',(fs.footerAr||43)+'px');setImportant(fa,'color',c.footerAr||'#DBC783');setImportant(fe,'font-size',(fs.footerEn||31)+'px');setImportant(fe,'color',c.footerEn||'#BBA96E');
+ const img=slide.querySelector('.ad-bg-image'),ix=v.imageFx||{},sk=Math.max(.1,Number(ix.intensity||30))/100;if(img&&ix.type&&ix.type!=='static'){img.getAnimations?.().forEach(a=>a.cancel());let f=[{transform:'translate(0,0) scale(1)'},{transform:'translate(0,0) scale(1)'}];if(ix.type==='cinematic-push'||ix.type==='push-halo')f=[{transform:'translate(0,0) scale(1)'},{transform:`translate(${8*sk}px,${-6*sk}px) scale(${1+.025*sk})`}];if(ix.type==='editorial-drift')f=[{transform:`translate(${-10*sk}px,${4*sk}px) scale(1.005)`},{transform:`translate(${10*sk}px,${-4*sk}px) scale(1.01)`}];img.animate(f,{duration:5200,easing:'cubic-bezier(.22,.61,.36,1)',fill:'both'})}
+ const sx=v.sceneFx||{},k=Math.max(.1,Number(sx.intensity||42))/100,targets=[en,ar,price,img].filter(Boolean);if(sx.type==='editorial-push')targets.forEach(e=>e.animate([{transform:'translateX(0) scale(1)'},{transform:`translateX(${e===img?10*k:-6*k}px) scale(${e===img?1+.018*k:1})`}],{duration:5200,easing:'cubic-bezier(.22,.61,.36,1)',fill:'both'}));if(sx.type==='depth-drift')targets.forEach(e=>e.animate([{transform:`translateX(${e===img?-12*k:8*k}px)`},{transform:`translateX(${e===img?12*k:-8*k}px)`}],{duration:5200,easing:'cubic-bezier(.22,.61,.36,1)',fill:'both'}));
+}
+function setFamily(ctx,id){const stage=ctx.d.querySelector('.display-stage');if(!stage)return;stage.classList.remove('v3-online','v3-atelier','v3-heritage','v3-imperial');stage.classList.add('v3-'+family(id))}
+async function render(){clearTimeout(renderTimer);const ctx=cineContext();if(!ctx||typeof ctx.iw.createAdElement!=='function'){$('status').textContent='Cinematic engine is loading…';renderTimer=setTimeout(render,350);return}const ad=currentAd();try{const content=await savedContent(ad.id);ctx.iw.eval('clearTimeout(slideTimer); isPaused=true;');const slide=ctx.iw.createAdElement(ad),area=ctx.d.getElementById('dynamic-ad-area');area.replaceChildren(slide);slide.classList.add('is-current');setFamily(ctx,ad.id);const img=slide.querySelector('.ad-bg-image');if(img)img.style.transform=`translate(${val('posX')||0}%,${val('posY')||0}%) scale(${val('zoom')||1})`;applyVisual(slide,content);slide.querySelectorAll('*').forEach(el=>el.style.animationPlayState='running');if(typeof ctx.iw.restartProgressBar==='function')ctx.iw.restartProgressBar(7000);$('previewTitle').textContent=`Ad ${ad.id} — ${val('titleEn')||val('titleAr')||'Preview'}`;$('status').textContent='Saved Draft visual settings applied · live display unchanged'}catch(e){console.error(e);$('status').textContent='Preview could not render.'}}
+function schedule(){if(!$('modal').classList.contains('open'))return;clearTimeout(renderTimer);renderTimer=setTimeout(render,450)}
+function bindAdmin(){const d=adminDoc();if(!d)return;['titleEn','titleAr','price','oldPrice','save','labelEn','labelAr','zoom','posX','posY','imageFile'].forEach(id=>{const el=d.getElementById(id);if(el){el.addEventListener('input',schedule);el.addEventListener('change',schedule)}});d.addEventListener('click',e=>{if(e.target.closest('.ad-btn'))setTimeout(schedule,120)})}
+$('openPreview').onclick=()=>{$('modal').classList.add('open');render()};$('close').onclick=()=>$('modal').classList.remove('open');$('replay').onclick=render;$('fullscreen').onclick=()=>$('screenShell').requestFullscreen?.();$('adminFrame').addEventListener('load',()=>setTimeout(bindAdmin,250));$('cineFrame').addEventListener('load',()=>{if($('modal').classList.contains('open'))setTimeout(render,700)});document.addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').classList.remove('open')});
+})();
+</script>
+</body>
+</html>
