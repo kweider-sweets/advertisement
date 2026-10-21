@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Production MP4 Exporter V16</title>
+<style>html,body{margin:0;min-height:100%;background:#070707;color:#f3d98d;font-family:Arial,sans-serif}.boot{min-height:100vh;display:grid;place-items:center;text-align:center;padding:24px}.boot b{display:block;font-size:22px;letter-spacing:.08em}.boot span{display:block;margin-top:10px;color:#bcae91;font-size:13px}</style>
+</head>
+<body><div class="boot"><div><b>KWEIDER PRODUCTION EXPORTER V16</b><span>Loading premium scene motion · no flash…</span></div></div>
+<script>
+(async()=>{'use strict';try{
+ const r=await fetch('screen-export-production-v15.html?v=15',{cache:'no-store'});if(!r.ok)throw new Error('Could not load V15 base: HTTP '+r.status);let src=await r.text();
+ src=src.replaceAll('PRODUCTION EXPORTER V15','PRODUCTION EXPORTER V16').replaceAll('Production MP4 Exporter V15','Production MP4 Exporter V16').replaceAll('Exporter V15','Exporter V16');
+ const marker="src=src.replace(needle,inject+'\\n'+needle);";
+ if(!src.includes(marker))throw new Error('V15 injection marker not found.');
+ const replacement=`const sceneInject=\`
+const sceneMarker='function drawScene(ctx,ad,t,dur){';
+if(!html.includes(sceneMarker))throw new Error('V15 drawScene marker not found for scene FX.');
+html=html.replace(sceneMarker,sceneMarker+\"const kSceneType=ad?.visual?.sceneFx?.type||'off',kSceneK=clamp(Number(ad?.visual?.sceneFx?.intensity??42)/100,0,1),kSceneP=smooth(clamp(t/Math.max(.01,dur),0,1));\");
+html=html.replace(\"const sweep=(t-1.25)/2.7;if(sweep>0&&sweep<1){\",\"const sweep=(t-1.25)/2.7;if(kSceneType==='legacy-flash'&&sweep>0&&sweep<1){\");
+html=html.replace(\"ctx.fillStyle='rgba(197,160,89,.08)';ctx.fillRect(HALF_W-1,0,2,FULL_H);\",\"ctx.fillStyle='rgba(197,160,89,.08)';ctx.fillRect(HALF_W-1,0,2,FULL_H);if(kSceneType==='gallery-spotlight'){ctx.save();const sx=FULL_W*(-.18+1.36*kSceneP),sg2=ctx.createRadialGradient(sx,FULL_H*.48,40,sx,FULL_H*.48,FULL_W*.52);sg2.addColorStop(0,'rgba(255,247,224,'+(.055+.055*kSceneK)+')');sg2.addColorStop(.34,'rgba(214,183,120,'+(.028+.035*kSceneK)+')');sg2.addColorStop(.72,'rgba(74,52,28,'+(.018+.030*kSceneK)+')');sg2.addColorStop(1,'rgba(0,0,0,0)');ctx.globalCompositeOperation='soft-light';ctx.fillStyle=sg2;ctx.fillRect(0,0,FULL_W,FULL_H);ctx.restore()}\");
+html=html.replace(\"scale=fit*Number(ad.zoom||1)*m.s*(imageM?imageM.s:1)*premiumFx.s,cx=1620+Number(ad.x||0)/100*HALF_W+m.x+(imageM?imageM.x:0)+premiumFx.x,cy=960+Number(ad.y||0)/100*FULL_H+m.y+(imageM?imageM.y:0)+premiumFx.y\",\"scale=fit*Number(ad.zoom||1)*m.s*(imageM?imageM.s:1)*premiumFx.s*(kSceneType==='editorial-push'?1+.018*kSceneK*kSceneP:kSceneType==='depth-drift'?1+.006*kSceneK:1),cx=1620+Number(ad.x||0)/100*HALF_W+m.x+(imageM?imageM.x:0)+premiumFx.x+(kSceneType==='editorial-push'?12*kSceneK*(kSceneP-.5):kSceneType==='depth-drift'?20*kSceneK*(kSceneP-.5):0),cy=960+Number(ad.y||0)/100*FULL_H+m.y+(imageM?imageM.y:0)+premiumFx.y+(kSceneType==='editorial-push'?-9*kSceneK*kSceneP:kSceneType==='depth-drift'?5*kSceneK*(.5-kSceneP):0)\");
+html=html.replace(\"const center=540;\",\"const center=540+(kSceneType==='editorial-push'?6*kSceneK*kSceneP:kSceneType==='depth-drift'?-13*kSceneK*(kSceneP-.5):0);\");
+html=html.replace('V15: V12 typography + entrance controls, premium editorial product motion, and saved per-line text colours. Zero-black/no-freeze transitions remain preserved.','V16: premium scene motion with Editorial Push, Depth Drift and Gallery Spotlight. Legacy flash sweep is disabled. V15 text colours, premium image motion and zero-black/no-freeze transitions are preserved.');
+html=html.replace('Deterministic renderer · premium motion · per-line text colours','Deterministic renderer · 3 premium scene FX · no flash');
+html=html.replace('<div class=\"pill\">TEXT COLORS</div>','<div class=\"pill\">TEXT COLORS</div><div class=\"pill\">3 SCENE FX · NO FLASH</div>');
+\`;
+src=src.replace(needle,inject+'\\n'+sceneInject+'\\n'+needle);`;
+ src=src.replace(marker,replacement);
+ document.open();document.write(src);document.close();
+}catch(err){document.body.innerHTML='<div class="boot"><div><b>V16 LOAD ERROR</b><span>'+String(err&&err.message||err)+'</span></div></div>';console.error(err)}})();
+</script>
+</body></html>
