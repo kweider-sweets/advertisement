@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control V4.4 — Seam + Badge + V17</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#host{display:block;width:100%;height:100%;border:0;background:#080808}</style>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v43.html?v=440" title="KWEIDER Screen Control V4.4"></iframe>
+<script>
+(()=>{'use strict';
+const host=document.getElementById('host');
+function allDocs(doc,out=[],depth=0){if(!doc||depth>36)return out;out.push(doc);try{for(const f of doc.querySelectorAll('iframe')){try{if(f.contentDocument)allDocs(f.contentDocument,out,depth+1)}catch(_){}}}catch(_){}return out}
+function patchCinematic(d){
+ if(!d||!d.querySelector('.display-stage'))return false;
+ let s=d.getElementById('kV44CineStyle');
+ if(!s){s=d.createElement('style');s.id='kV44CineStyle';s.textContent=`
+ :root{--centre-gap:4px!important}
+ .centre-seam{width:4px!important;background:rgba(24,18,10,.72)!important;box-shadow:0 0 3px rgba(0,0,0,.35)!important}
+ #cinematic-merger-overlay,.text-flash-layer,.text-glint-field{display:none!important}
+ `;d.head.appendChild(s)}
+ d.querySelectorAll('.save-badge').forEach(b=>{
+   if(!b.dataset.kV44W){const r=b.getBoundingClientRect(),cs=d.defaultView.getComputedStyle(b);b.dataset.kV44W=String(r.width);b.dataset.kV44H=String(r.height);b.dataset.kV44Fs=String(parseFloat(cs.fontSize)||34)}
+   const w=Number(b.dataset.kV44W||0),h=Number(b.dataset.kV44H||0),fs=Number(b.dataset.kV44Fs||34);
+   if(w>0){b.style.setProperty('width',w+'px','important');b.style.setProperty('min-width',w+'px','important');b.style.setProperty('max-width',w+'px','important')}
+   if(h>0){b.style.setProperty('height',h+'px','important');b.style.setProperty('min-height',h+'px','important')}
+   b.style.setProperty('font-size',(fs*1.18)+'px','important');b.style.setProperty('display','flex','important');b.style.setProperty('align-items','center','important');b.style.setProperty('justify-content','center','important');b.style.setProperty('white-space','nowrap','important');
+ });
+ return true
+}
+function patch(){try{const docs=allDocs(host.contentDocument||document);let ok=false;for(const d of docs){if(patchCinematic(d))ok=true;const old=d.getElementById('mp4ExportBtn');if(old){old.textContent='Production MP4 V17 / تصدير نهائي';old.title='V17 · Scene FX synced · Text Colors · slim seam · larger badge text';old.onclick=()=>window.open('screen-export-production-v17.html?v=17','_blank','noopener');ok=true}const exp=d.getElementById('exportBtn');if(exp&&/Exporter/i.test(exp.textContent||'')){exp.textContent='Open V17 Exporter';exp.onclick=()=>window.open('screen-export-production-v17.html?v=17','_blank','noopener');ok=true}const pill=d.querySelector?.('.bar .pill');if(pill&&/^V[34]\./.test(pill.textContent||''))pill.textContent='V4.4'}return ok}catch(_){return false}}
+host.addEventListener('load',()=>setTimeout(patch,1200));setInterval(patch,350);
+})();
+</script>
+</body>
+</html>
