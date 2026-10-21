@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control — Clean V1</title>
+<style>
+:root{--gold:#c5a059;--gold2:#f3d98d;--bg:#080808;--line:#30291f;--muted:#a89d89}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Arial,sans-serif;color:#fff}
+body{display:grid;grid-template-rows:48px 1fr}
+#cleanBar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 14px;border-bottom:1px solid var(--line);background:#0b0b0b;z-index:20}
+.brand{font-weight:900;letter-spacing:.12em;color:var(--gold2);font-size:13px}.sub{color:var(--muted);font-size:10px;margin-left:10px}
+.left{display:flex;align-items:center;min-width:0}.right{display:flex;gap:8px;align-items:center}.pill{border:1px solid #4a402e;border-radius:999px;padding:5px 9px;color:#d8c27b;font-size:9px;font-weight:800;white-space:nowrap}
+.btn{border:1px solid #8b7443;background:#15120e;color:#ead89f;border-radius:8px;padding:8px 11px;font-weight:800;font-size:11px;cursor:pointer;white-space:nowrap}.btn.primary{border-color:#d1ae44;background:linear-gradient(135deg,#85620f,#d0ad42);color:#090704}
+#host{display:block;width:100%;height:100%;border:0;background:#080808}
+@media(max-width:700px){.sub,.pill{display:none}.brand{font-size:11px}.btn{padding:7px 9px;font-size:10px}}
+</style>
+</head>
+<body>
+<header id="cleanBar">
+  <div class="left"><div class="brand">KWEIDER SCREEN CONTROL</div><div class="sub">Clean rebuild · stable base · no stacked version patches</div></div>
+  <div class="right"><span class="pill">CLEAN V1</span><button id="exportBtnClean" class="btn primary">Production MP4 / تصدير نهائي</button></div>
+</header>
+<iframe id="host" src="screen-admin-control-v22.html?v=clean1" title="KWEIDER Screen Admin — Clean V1"></iframe>
+<script>
+(()=>{'use strict';
+const btn=document.getElementById('exportBtnClean');
+btn.addEventListener('click',()=>window.open('screen-export-production-v11.html?v=clean1','_blank','noopener'));
+})();
+</script>
+</body>
+</html>
