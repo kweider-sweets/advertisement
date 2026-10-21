@@ -51,3 +51,9 @@ The complete pre-cleanup state is preserved in:
 Pre-cleanup checkpoint commit:
 
 `face634c76171d4e069d8b6eaea2467c4a28576f`
+
+## Design studio extension (21 October 2026)
+
+The approved entry point now uses the direct canvas editor and shared design engine.
+See `DESIGN_STUDIO.md` for the current dependency graph, data compatibility and verification.
+The earlier nested iframe chain above describes the preserved pre-extension baseline.
