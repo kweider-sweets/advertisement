@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KWEIDER Screen Admin — Background Engine</title>
+<title>KWEIDER Screen Admin — Per-Ad Background Engine</title>
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#manager{display:block;width:100%;height:100%;border:0;background:#080808}</style>
 </head>
 <body>
-<iframe id="manager" src="screen-admin-cinematic-unified.html?unified=1" title="KWEIDER Screen Admin"></iframe>
+<iframe id="manager" src="screen-admin-cinematic-unified.html?per-ad=1" title="KWEIDER Screen Admin"></iframe>
 <script>
 (()=>{'use strict';
-const GLOBAL_KEY='kweider-screen-background-global-v1';
-const OVERRIDE_KEY='kweider-screen-background-overrides-v1';
+const PER_AD_KEY='kweider-screen-background-per-ad-v2';
+const LEGACY_GLOBAL='kweider-screen-background-global-v1';
+const LEGACY_OVERRIDES='kweider-screen-background-overrides-v1';
 const manager=document.getElementById('manager');
 function read(k,f){try{return JSON.parse(localStorage.getItem(k)||'null')||f}catch(_){return f}}
 function write(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}
@@ -19,15 +20,15 @@ function norm(v){return /^#[0-9a-f]{6}$/i.test(String(v||'').trim())?String(v).t
 function outer(){try{return manager.contentDocument}catch(_){return null}}
 function admin(){try{return outer()?.getElementById('adminFrame')?.contentDocument||null}catch(_){return null}}
 function currentId(){const d=admin(),b=d?.querySelector('.ad-btn.active'),m=b?.textContent.match(/Ad\s+(\d+)/i);return m?Number(m[1]):1}
-function currentConfig(){const id=currentId(),g=read(GLOBAL_KEY,{theme:'luxury-black',color:'#050505'}),o=read(OVERRIDE_KEY,{});return o?.[id]?.enabled?o[id]:g}
+function currentConfig(){const id=currentId(),p=read(PER_AD_KEY,{});if(p?.[id]?.color)return p[id];const old=read(LEGACY_OVERRIDES,{});if(old?.[id]?.enabled&&old[id].color)return old[id];const g=read(LEGACY_GLOBAL,null);return g?.color?g:{theme:'luxury-black',color:'#050505'}}
 function cinematicDoc(){try{const c=outer()?.getElementById('cineFrame')?.contentDocument;return c?.getElementById('screen')?.contentDocument||null}catch(_){return null}}
 function applyStatic(){const d=admin();if(!d)return;const c=norm(currentConfig().color),p=d.querySelector('.display-preview');if(p)p.style.setProperty('background',c,'important');for(const sel of ['.left','.right','.image-stage']){const e=d.querySelector(sel);if(e){e.style.setProperty('background','transparent','important');e.style.setProperty('background-color','transparent','important')}}}
-function applyCinematic(){const d=cinematicDoc();if(!d)return;const c=norm(currentConfig().color);let s=d.getElementById('kUnifiedBgStyle');if(!s){s=d.createElement('style');s.id='kUnifiedBgStyle';d.head.appendChild(s)}s.textContent=`.display-stage,.ad-area,#dynamic-ad-area,.ad-container{background:${c}!important;background-color:${c}!important}.screen-half,.left-screen,.right-screen,.text-cinematic-stage,.image-cinematic-stage,.image-safe-frame,.image-entry,.image-drift{background:transparent!important;background-color:transparent!important}`}
+function applyCinematic(){const d=cinematicDoc();if(!d)return;const c=norm(currentConfig().color);let s=d.getElementById('kPerAdBgStyle');if(!s){s=d.createElement('style');s.id='kPerAdBgStyle';d.head.appendChild(s)}s.textContent=`.display-stage,.ad-area,#dynamic-ad-area,.ad-container{background:${c}!important;background-color:${c}!important}.screen-half,.left-screen,.right-screen,.text-cinematic-stage,.image-cinematic-stage,.image-safe-frame,.image-entry,.image-drift{background:transparent!important;background-color:transparent!important}`}
 function applyAll(){applyStatic();applyCinematic()}
-function setGlobal(cfg){write(GLOBAL_KEY,{theme:cfg?.theme||'custom',color:norm(cfg?.color)});applyAll()}
-function setAd(id,cfg){const o=read(OVERRIDE_KEY,{});o[Number(id)]={enabled:true,theme:cfg?.theme||'custom',color:norm(cfg?.color)};write(OVERRIDE_KEY,o);applyAll()}
-function clearAd(id){const o=read(OVERRIDE_KEY,{});delete o[Number(id)];write(OVERRIDE_KEY,o);applyAll()}
-window.KWEIDER_BG_API={setGlobal,setAd,clearAd,applyAll,currentId,currentConfig};
+function setAd(id,cfg){const p=read(PER_AD_KEY,{});p[Number(id)]={theme:cfg?.theme||'custom',color:norm(cfg?.color)};write(PER_AD_KEY,p);applyAll()}
+function clearAd(id){const p=read(PER_AD_KEY,{});delete p[Number(id)];write(PER_AD_KEY,p);applyAll()}
+function setGlobal(cfg){setAd(currentId(),cfg)}
+window.KWEIDER_BG_API={setAd,clearAd,setGlobal,applyAll,currentId,currentConfig};
 manager.addEventListener('load',()=>setTimeout(applyAll,350));
 setInterval(applyAll,300);
 })();
