@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control V4.1 — Cinematic Color Sync</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#host{display:block;width:100%;height:100%;border:0;background:#080808}</style>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v40.html?v=410" title="KWEIDER Screen Control V4.1"></iframe>
+<script>
+(()=>{'use strict';
+const host=document.getElementById('host');
+const DEF={en:'#f3d98d',ar:'#c5a059',old:'#f5ead0',price:'#f3d98d',footerAr:'#dbc783',footerEn:'#bba96e'};
+function allDocs(doc,out=[],depth=0){if(!doc||depth>28)return out;out.push(doc);try{for(const f of doc.querySelectorAll('iframe')){try{if(f.contentDocument)allDocs(f.contentDocument,out,depth+1)}catch(_){}}}catch(_){}return out}
+function valid(v,d){v=String(v||'').trim();return /^#[0-9a-f]{6}$/i.test(v)?v:d}
+function locate(){const docs=allDocs(host.contentDocument||document);let controls=null,cine=null,bar=null;for(const d of docs){if(!controls&&d.getElementById('kTextColorCard'))controls=d;if(!cine&&d.getElementById('dynamic-ad-area')&&d.querySelector('.display-stage'))cine=d;if(!bar&&d.getElementById('historyBtn')&&d.querySelector?.('.bar .right'))bar=d}return{controls,cine,bar}}
+function colors(d){const o={};for(const k of Object.keys(DEF))o[k]=valid(d?.getElementById('kc_'+k)?.value,DEF[k]);return o}
+function setColor(root,sel,color){root.querySelectorAll(sel).forEach(el=>el.style.setProperty('color',color,'important'))}
+function sync(){try{const {controls,cine,bar}=locate();if(!controls)return false;const c=colors(controls);if(cine){
+ setColor(cine,'.ad-title-ar, .ad-title-ar .title-line',c.en);
+ setColor(cine,'.ad-title-en, .ad-title-en .title-line',c.ar);
+ setColor(cine,'.old-price-wrap, .old-price-wrap span',c.old);
+ setColor(cine,'.new-price',c.price);
+ setColor(cine,'.ad-footer-ar',c.footerAr);
+ setColor(cine,'.ad-footer-en',c.footerEn);
+ }
+ if(bar){const p=bar.querySelector('.pill');if(p)p.textContent='V4.1';bar.title='KWEIDER Screen Control V4.1'}
+ return true}catch(_){return false}}
+host.addEventListener('load',()=>setTimeout(sync,1200));setInterval(sync,180);
+})();
+</script>
+</body>
+</html>
