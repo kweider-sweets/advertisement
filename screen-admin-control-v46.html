@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>KWEIDER Screen Control V4.6 — Stable Export Button</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080808}#host{display:block;width:100%;height:100%;border:0;background:#080808}</style>
+</head>
+<body>
+<iframe id="host" src="screen-admin-control-v44.html?v=460" title="KWEIDER Screen Control V4.6"></iframe>
+<script>
+(()=>{'use strict';
+const host=document.getElementById('host');
+function allDocs(doc,out=[],depth=0){if(!doc||depth>40)return out;out.push(doc);try{for(const f of doc.querySelectorAll('iframe')){try{if(f.contentDocument)allDocs(f.contentDocument,out,depth+1)}catch(_){}}}catch(_){}return out}
+function isolate(){try{
+ const docs=allDocs(host.contentDocument||document);
+ for(const d of docs){
+   if(d.getElementById('historyBtn')&&d.querySelector('.bar .right')){
+     let st=d.getElementById('kStableExportCss');
+     if(!st){st=d.createElement('style');st.id='kStableExportCss';st.textContent=`#mp4ExportBtn,#mp4ExportStableV17,#exportStableV17{display:none!important}`;d.head.appendChild(st)}
+     const right=d.querySelector('.bar .right');
+     let b=d.getElementById('kFinalProductionExport');
+     if(!b){b=d.createElement('button');b.id='kFinalProductionExport';b.className='btn';b.textContent='Production MP4 / تصدير نهائي';b.style.borderColor='#d8bb66';b.style.color='#f3d98d';b.style.fontWeight='900';right.insertBefore(b,right.firstChild)}
+     b.onclick=()=>window.open('screen-export-production-v17.html?v=17','_blank','noopener');
+     b.title='Final Production Export · V17 engine';
+     const pill=d.querySelector('.bar .pill');if(pill)pill.textContent='V4.6';
+   }
+   const old=d.getElementById('mp4ExportBtn');if(old)old.style.setProperty('display','none','important');
+   const old2=d.getElementById('mp4ExportStableV17');if(old2)old2.style.setProperty('display','none','important');
+ }
+ return true;
+ }catch(_){return false}}
+host.addEventListener('load',()=>setTimeout(isolate,900));setInterval(isolate,400);
+})();
+</script>
+</body></html>
