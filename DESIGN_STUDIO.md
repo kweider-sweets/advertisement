@@ -32,3 +32,20 @@ this development editor does not change production playback automatically.
 Validation: `node tests/screen-design.test.cjs`, syntax checks, and browser demo inspection.
 Authenticated save, publication, and actual H.264 output require an authorised admin session;
 these should not be represented as tested without one. Demo mode cannot save or publish.
+
+## Motion and inspector extension — 22 October 2026
+
+- Independent entrance, exit, delay, easing, distance, strength and cycle duration per text/image layer.
+- Entrance styles: instant, fade, rise/drop, horizontal slides, depth zoom, directional reveals and focus.
+- Continuous image styles: push/pull, horizontal/vertical drift, float, breathe, depth drift and gold halo.
+- No new motion applies rotation. Explicit operator rotation remains available and all previous tools remain.
+- Scene controls include separate image/scene strengths, gallery lighting, scene push/pan and text stagger.
+- Ready-made Quiet Luxury / Elegant Reveal / Street Attraction / Floating Display / Static presets.
+- Explicit newline-separated text can be split into independently editable layers; the original is hidden,
+  retained, and recoverable through undo. Auto-wrapped lines can first be separated with Enter.
+- Inspector navigation: Element, Content & Playback, Background, Scene, All Tools. Compact layer picker;
+  advanced controls and layer management remain available in collapsible sections.
+- The editor/exporter still share the same deterministic renderer. Motion functions are tested across
+  every entrance/continuous-motion combination, including independent timing and still-preview bypass.
+- Browser demo validation covered selecting presets, preview playback, tabs and multiline splitting.
+  Authenticated save/publication and an actual MP4 encode remain unverified without an admin session.
